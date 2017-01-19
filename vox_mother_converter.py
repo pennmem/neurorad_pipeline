@@ -163,7 +163,7 @@ def add_grid_loc(leads):
             contact.grid_loc = ((num-start_num) % contact.grid_size[0], (num-start_num)/contact.grid_size[0])
             contact.grid_group = group
 
-def add_freesurfer_coords(leads, files):
+def x2_add_freesurfer_coords(leads, files):
     coords_file = files['fs_coords']
     for line in open(coords_file, 'r'):
         split_line = line.split('\t')
@@ -192,6 +192,18 @@ def X_add_freesurfer_coords(leads, files):
                 if contact.jack_num is not None and int(contact.jack_num) == int(jack_num):
                     contact.fs_coords = fs_coords
 
+def add_freesurfer_coords(leads, files):
+    coords_file = files['fs_coords']
+    child_file = files['vox_child']
+    for coord_line, child_line in zip(open(coords_file, 'r'), open(child_file, 'r')):
+        jack_num = int(child_line.split('\t')[0])
+        split_line = coord_line.split()
+        fs_coords = [float(f) for f in split_line]
+        for lead in leads.values():
+            for contact in lead.values():
+                if contact.jack_num is not None and int(contact.jack_num) == int(jack_num):
+                    contact.fs_coords = fs_coords
+        
 def build_leads(files, do_freesurfer=False):
     """
     Builds the leads dictionary from VOX_coords_mother and jacksheet
@@ -214,7 +226,8 @@ def file_locations(subject):
     files = dict(
         vox_mom=os.path.join(paths.rhino_root, 'data', 'eeg', subject, 'tal', 'VOX_coords_mother.txt'),
         jacksheet=os.path.join(paths.rhino_root, 'data', 'eeg', subject, 'docs', 'jacksheet.txt'),
-        fs_coords=os.path.join(paths.rhino_root, 'data', 'eeg', subject, 'tal', 'coords', 'monopolar_start_blender.txt')
+        fs_coords=os.path.join(paths.rhino_root, 'data', 'eeg', subject, 'tal', 'coords', 'indiv_monopolar_nosnap.txt'),
+        vox_child=os.path.join(paths.rhino_root, 'data', 'eeg', subject, 'tal', 'VOX_coords.txt')
     )
     return files
 
