@@ -240,13 +240,14 @@ I think it's fair to use the localization for the skipped electrode as the local
 new bipolar pair. If multiple contacts are skipped, perhaps we shouldn't create a bipolar pair
 at all, as the analysis is now based on a radically different distance.
 
-3) Dykstra method: Has tobe integrated into the `CorrectCoordinatesTask()`, which currently is 
+3) Dykstra method: Has to be integrated into the `CorrectCoordinatesTask()`, which currently is 
 just a `TODO`.
 
 4) Joel's manual localization. A tool should be developed that lets Joel add manual localizations
 (for monotopolar and bipolar pairs) to existing localizations. This might be implemented as an
 entirely different pipeline that writes to the same location. The inputs to this pipeline will 
 probably look as follows:
+
       ```yaml
       - name: original_localization
         << : *LINK
