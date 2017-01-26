@@ -27,7 +27,7 @@ The submission utility is currently located in the [event_creation](https://gith
 
 There are four hooks into the neuroradiology pipeline from the submission utility:
 
-##### Transfer config:
+#### Transfer config:
 Each pipeline in the submission utility has its own list of input files/links/directories. The file 
 `submission/transfer_inputs/localization_inputs.yml` defines the inputs to the neurorad pipeline:
 ```yaml
@@ -84,7 +84,7 @@ Note that `VOX_coords_mother` and `jacksheet` are present as inputs when the gro
 `voxel_coordinates` is an input when the group is `new`. The pipeline can convert the old-formatted
 "mother" file into the newer json format, but can also just use the new format if it exists. 
 
-##### Transferer:
+#### Transferer:
 
 `submission.transferer` contains the following function to generate a localization transferer:
 ```python
@@ -112,7 +112,7 @@ Note again the presence of `old` or `new`, which tells the pipeline whether to l
 
 The transferer will ensure that all of the required files are present for the specified group.
 
-##### Submission pipeline
+#### Submission pipeline:
 
 Each pipeline defines a list of tasks to be executed. For localization, this pipeline is implemented
 in the function `submission.pipelines.build_import_localization_pipeline()`:
@@ -141,7 +141,7 @@ The pipeline ensures that each of the six tasks:
 is executed in order, and that if any one of them fails the appropriate error message is listed,
 and submission is rolled back. 
 
-##### Task definitions
+#### Task definitions:
 Finally, each task to be executed is defined in `submission.neurorad_tasks`
 
 Here, each of the files in the neurorad pipeline is referenced (with the exception of coordinate
@@ -223,3 +223,19 @@ class WriteFinalLocalizationTask(PipelineTask):
         logger.info("Writing localization.json file")
         self.create_file(os.path.join(db_folder, 'localization.json',), localization.to_jsons(), 'localization', False)
 ```
+
+There are a couple of other references to the neuroradiology pipeline in `submission.automation`
+(which constructs and describes the `Pipeline` object) and `submission.convenience`, which 
+prompts the user for localization inputs. 
+
+## TODO:
+
+Integration of localization into the montage creation pipeline has yet to be completed.
+
+To do so, a set of links to the localization outputs in the database will have to be defined
+in `montage_inputs.yml`, and a process will have to be constructed whereby the jacksheet is used
+to filter the contacts defined in the localization object. 
+
+I do not know how we will deal with the localization of the extra bipolar pairs that are created.
+In the simple case where one contact is skipped, the bipolar pair would have the same localization
+as the pair that resided between the existing pairs. 
