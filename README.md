@@ -234,10 +234,12 @@ prompts the user for localization inputs.
 To do so, a set of links to the localization outputs in the database will have to be defined
 in `montage_inputs.yml`, and a process will have to be constructed whereby the jacksheet is used
 to filter the contacts defined in the localization object. 
+
 2) Localizing "extra" bipolar pairs. If one contact is skipped in the middle of a strip or grid, 
 I think it's fair to use the localization for the skipped electrode as the localization for the
 new bipolar pair. If multiple contacts are skipped, perhaps we shouldn't create a bipolar pair
 at all, as the analysis is now based on a radically different distance.
+
 3) Dykstra method: Has tobe integrated into the `CorrectCoordinatesTask()`, which currently is 
 just a `TODO`.
 
