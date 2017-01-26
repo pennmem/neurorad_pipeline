@@ -230,12 +230,44 @@ prompts the user for localization inputs.
 
 ## TODO:
 
-Integration of localization into the montage creation pipeline has yet to be completed.
-
+1) Integration of localization into the montage creation pipeline has yet to be completed.
 To do so, a set of links to the localization outputs in the database will have to be defined
 in `montage_inputs.yml`, and a process will have to be constructed whereby the jacksheet is used
 to filter the contacts defined in the localization object. 
+2) Localizing "extra" bipolar pairs. If one contact is skipped in the middle of a strip or grid, 
+I think it's fair to use the localization for the skipped electrode as the localization for the
+new bipolar pair. If multiple contacts are skipped, perhaps we shouldn't create a bipolar pair
+at all, as the analysis is now based on a radically different distance.
+3) Dykstra method: Has tobe integrated into the `CorrectCoordinatesTask()`, which currently is 
+just a `TODO`.
 
-I do not know how we will deal with the localization of the extra bipolar pairs that are created.
-In the simple case where one contact is skipped, the bipolar pair would have the same localization
-as the pair that resided between the existing pairs. 
+4) Joel's manual localization. A tool should be developed that lets Joel add manual localizations
+(for monotopolar and bipolar pairs) to existing localizations. This might be implemented as an
+entirely different pipeline that writes to the same location. The inputs to this pipeline will 
+probably look as follows:
+      ```yaml
+      - name: original_localization
+        << : *LINK
+        groups: [ 'manual_localization' ]
+        origin_directory: *CURR_LOC
+        origin_file: 'localization.json'
+        destination: 'localization_orig.json'
+    
+      - name: vox_mom
+        <<: *FILE
+        groups: [ 'manual_localization' ]
+        origin_directory: *WHEREVER_JOEL_PLEASES
+        origin_file: 'manual_localization.csv'
+        destination: 'manual_localization.csv'
+      ````
+    with `*CURR_LOC` defined as:
+    ```yaml
+      protcol_db_dir      : &PROTOCOL_DB '{db_root}/protocols/{protocol}'
+      subject_db_dir      : &SUBJ_DB !join [*PROTOCOL_DB, 'subjects/{subject}']
+      localization_db_dir : &LOC_DB !join [*SUBJ_DB, 'localizations/{localization}']
+      current_loc_dir     : &CURR_LOC !join [*LOC_DB 'current_processed']
+    ```
+    this will allow the current localization to be imported as a link that references the 
+    previous output of the pipeline (the link will automatically resolve to point to the real path of 
+    current_processed (the datetime-stamped directory), rather than pointing to the symlink).
+    
