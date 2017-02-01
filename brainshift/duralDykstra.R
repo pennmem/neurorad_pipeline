@@ -29,7 +29,13 @@ present = libraries %in% installed
 if (all(present)) {
   invisible(lapply(libraries, require, character.only=T))
 } else {
-  stop(paste('Missing libraries. Please install:', paste(libraries[!present], collapse=' ') ))
+    r <- getOption("repos")
+    r["CRAN"] <- "http://cran.us.r-project.org"
+    options(repos = r)
+    rm(r)
+    install.packages(libraries[!present], dep = TRUE)
+    invisible(lapply(libraries, require, character.only=T))
+    # stop(paste('Missing libraries. Please install:', paste(libraries[!present], collapse=' ') ))
 }
 ############
 
