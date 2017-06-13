@@ -244,7 +244,7 @@ at all, as the analysis is now based on a radically different distance.
 just a `TODO`.
 
 4) Joel's manual localization. A tool should be developed that lets Joel add manual localizations
-(for monotopolar and bipolar pairs) to existing localizations. This might be implemented as an
+(for monopolar and bipolar pairs) to existing localizations. This might be implemented as an
 entirely different pipeline that writes to the same location. The inputs to this pipeline will 
 probably look as follows:
 
@@ -273,4 +273,3 @@ current_loc_dir     : &CURR_LOC !join [*LOC_DB 'current_processed']
 this will allow the current localization to be imported as a link that references the 
 previous output of the pipeline (the link will automatically resolve to point to the real path of 
 current_processed (the datetime-stamped directory), rather than pointing to the symlink).
-    
