@@ -49,10 +49,10 @@ def brainshift_correct(loc, sub, outfolder, fsfolder, overwrite=False):
     
     ### prepare R command and run
     logfile = os.path.join(outfolder, sub + '_shiftCorrection.Rlog')
-    
-    args = "sub='" + sub +  "' outfolder='" + outfolder + "' fsfolder='" + fsfolder + "'"
-    cmd = "/usr/lib64/R/bin/R CMD BATCH --no-save --no-restore " + "\"--args " + args + "\" "  + Rcorrection + " " + logfile
-    call(cmd, shell=True)
+    cmd = ["R", "CMD", "BATCH", "--no-save", "--no-restore", "--args",
+           "sub='{:s}'".format(sub), "outfolder='{:s}'".format(outfolder),
+           "fsfolder='{:s}'".format(fsfolder), Rcorrection, logfile]
+    call(cmd)
     ###
 
     ### load the corrected output
