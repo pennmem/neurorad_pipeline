@@ -1,3 +1,14 @@
+from __future__ import print_function
+
+import os
+import os.path as osp
+from subprocess import call
+
+from numpy import loadtxt, savetxt
+import numpy as np
+import nibabel as nb
+
+
 def brainshift_correct(loc, sub, outfolder, fsfolder, overwrite=False):
     """ Corrects for brain shift using sequential quadratic
     programming optimization in R (package nloptr).
@@ -7,23 +18,16 @@ def brainshift_correct(loc, sub, outfolder, fsfolder, overwrite=False):
     :param fsfolder: fresurfer folder for this subject
     :param overwrite: force processing and overwrite existing files
     """
-    from numpy import savetxt as savetxt
-    from numpy import loadtxt as loadtxt
-    import numpy as np
-    import os
-    from subprocess import call
-    import nibabel as nb
-
-    Rcorrection = "/home1/dorian.pustina/dykstra/duralDykstra.R"
+    here = osp.realpath(osp.dirname(__file__))
+    Rcorrection = osp.join(here, "brainshift", "duralDykstra.R")
     # sub = 'R1238N'
     # outfolder = '/data10/RAM/subjects/R1238N/imaging/R1238N'
     # fsfolder = '/data/eeg/freesurfer/subjects/R1238N'
 
-
     corrfile = os.path.join(outfolder, sub + '_shift_corrected.csv')
 
-    if  os.path.isfile(corrfile) and overwrite==False:
-        print "Corrected csv file already exists for " + sub + ". Use 'overwrite=True' to overwrite results."
+    if os.path.isfile(corrfile) and not overwrite:
+        print("Corrected csv file already exists for " + sub + ". Use 'overwrite=True' to overwrite results.")
         return -1
 
     ### get data and save them to files that R can read
@@ -50,7 +54,7 @@ def brainshift_correct(loc, sub, outfolder, fsfolder, overwrite=False):
     cmd = "/usr/lib64/R/bin/R CMD BATCH --no-save --no-restore " + "\"--args " + args + "\" "  + Rcorrection + " " + logfile
     call(cmd, shell=True)
     ###
-    
+
     ### load the corrected output
     newcoords = loadtxt(corrfile, skiprows=1, usecols=[5,6,7], delimiter=',')
     newnames = loadtxt(corrfile, skiprows=1, usecols=[0], delimiter=',', dtype=np.str)
