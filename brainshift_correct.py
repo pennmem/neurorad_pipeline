@@ -3,9 +3,9 @@ from __future__ import print_function
 import os
 import os.path as osp
 from subprocess import call
-
-from numpy import loadtxt, savetxt
-import numpy as np
+from submission.log import logger
+from numpy import savetxt
+import pandas as pd
 import nibabel as nb
 
 
@@ -48,33 +48,29 @@ def brainshift_correct(loc, sub, outfolder, fsfolder, overwrite=False):
     ###
     
     ### prepare R command and run
+
+    cmd_args = "'--args sub=\"{sub}\" outfolder=\"{outfolder}\" fsfolder=\"{fsfolder}\"'".format(
+        sub=sub,outfolder=outfolder,fsfolder=fsfolder
+    )
     logfile = os.path.join(outfolder, sub + '_shiftCorrection.Rlog')
-    cmd = ["R", "CMD", "BATCH", "--no-save", "--no-restore", "--args",
-           "sub='{:s}'".format(sub), "outfolder='{:s}'".format(outfolder),
-           "fsfolder='{:s}'".format(fsfolder), Rcorrection, logfile]
-    call(cmd)
+    cmd = ["R", "CMD", "BATCH", "--no-save", "--no-restore", cmd_args,Rcorrection, logfile]
+    logger.debug('Executing shell command %s'%str(cmd))
+    call(' '.join(cmd),shell=True)
     ###
 
     ### load the corrected output
-    newcoords = loadtxt(corrfile, skiprows=1, usecols=[5,6,7], delimiter=',')
-    newnames = loadtxt(corrfile, skiprows=1, usecols=[0], delimiter=',', dtype=np.str)
-    newtypes = loadtxt(corrfile, skiprows=1, usecols=[4], delimiter=',', dtype=np.str)
-    displaced = loadtxt(corrfile, skiprows=1, usecols=[8], delimiter=',')
-    closestVrtxDist = loadtxt(corrfile, skiprows=1, usecols=[9], delimiter=',')
-    linkedNames = loadtxt(corrfile, skiprows=1, usecols=[13], delimiter=',', dtype=np.str)
-    linkedDisp = loadtxt(corrfile, skiprows=1, usecols=[14], delimiter=',', dtype=np.str)
-    corrGroup = loadtxt(corrfile, skiprows=1, usecols=[15], delimiter=',', dtype=np.str)
-    closestVrtxCoord = loadtxt(corrfile, skiprows=1, usecols=[10,11,12], delimiter=',', dtype=np.str)
-    DKT = loadtxt(corrfile, skiprows=1, usecols=[16], delimiter=',', dtype=np.str)
-    fsaverage = loadtxt(corrfile, skiprows=1, usecols=[17,18,19], delimiter=',')
+    corrected_data = pd.DataFrame.from_csv(corrfile)
+    newnames=corrected_data.labels.data
+
     # put data in loc
-    loc.set_contact_coordinates('fs', newnames, newcoords, coordinate_type='corrected')
-    loc.set_contact_infos('displacement', newnames, displaced)
-    loc.set_contact_infos('closest_vertex_distance', newnames, closestVrtxDist)
-    loc.set_contact_infos('linked_electrodes', newnames, linkedNames)
-    loc.set_contact_infos('link_displaced', newnames, linkedDisp)
-    loc.set_contact_infos('group_corrected', newnames, corrGroup)
-    loc.set_contact_infos('closest_vertex_coordinate', newnames, closestVrtxCoord.tolist())
+    loc.set_contact_coordinates('fs', newnames, corrected_data[['corrx','corry','corrz']].data, coordinate_type='corrected')
+    loc.set_contact_infos('displacement', newnames, corrected_data.displacement.data)
+    loc.set_contact_infos('closest_vertex_distance', newnames,corrected_data.closestvertexdist.data)
+    loc.set_contact_infos('linked_electrodes', newnames, corrected_data.linkedto.data)
+    loc.set_contact_infos('link_displaced', newnames, corrected_data.linkdisplaced.data)
+    loc.set_contact_infos('group_corrected', newnames, corrected_data['group'].data)
+    loc.set_contact_infos('closest_vertex_coordinate', newnames,
+                          corrected_data[['correctedvertexx','correctedvertexy','correctedvertexz']].data.tolist())
     loc.set_contact_labels('dk', newnames, DKT)
     loc.set_contact_coordinates('fsaverage', newnames, fsaverage, coordinate_type='corrected')
     ###

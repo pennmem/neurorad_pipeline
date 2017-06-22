@@ -1,8 +1,7 @@
-
 # load arguments
 args=commandArgs(TRUE)
 for(i in 1:length(args)){
-  eval(parse(text=args[i]))
+    eval(parse(text=args[i]))
 }
 
 
@@ -10,10 +9,13 @@ source('/home1/dorian.pustina/dykstra/loadFunctions.R')
 source('/home1/dorian.pustina/dykstra/doSnapDykstra_experimental.R')
 
 
-# sub = 'R1238N'
-# outfolder = '/data10/RAM/subjects/R1238N/imaging/R1238N'
-# fsfolder = '/data/eeg/freesurfer/subjects/R1238N'
+#sub = 'R1235E'
+#
+#outfolder = '/home1/leond/temp'
+## outfolder = '/data10/RAM/subjects/R1238N/imaging/R1238N'
+#fsfolder = paste('/data/eeg/freesurfer/subjects/',sub,sep='')
 
+libloc = '/home2/RAM_maint/R_packages'
 
 radius = 40 # radius around electrodes to keep vertices
 xtol_rel=0.001 # tolerance for optimization 0.01 - 0.000001
@@ -22,17 +24,18 @@ preSnapPial = F # whether to snap each electrode to closest vertex
 
 ############
 # load necessary libraries
-libraries = c('nloptr', 'fields',
+libraries = c('nloptr','spam','maps','fields',
               'freesurfer', 'igraph')
-installed = rownames(installed.packages())
+installed = rownames(installed.packages(lib.loc=libloc))
 present = libraries %in% installed
 if (all(present)) {
-  invisible(lapply(libraries, require, character.only=T))
+  invisible(lapply(libraries, require, character.only=T,lib.loc=libloc))
 } else {
     r <- getOption("repos")
     r["CRAN"] <- "http://cran.us.r-project.org"
     options(repos = r)
     rm(r)
+    print(paste('Missing libraries. Please install:', paste(libraries[!present], collapse=' ') ))
     install.packages(libraries[!present], dep = TRUE)
     invisible(lapply(libraries, require, character.only=T))
     # stop(paste('Missing libraries. Please install:', paste(libraries[!present], collapse=' ') ))
@@ -171,4 +174,4 @@ xyz_orig[ xyz_orig$types=='D' , c('corrx','corry','corrz')] =
 xyz_orig[ xyz_orig$types=='D' , c('linkedto','linkdisplaced')] = c('N/A','N/A')
 
 write.csv(xyz_orig, 
-          file = file.path(outfol
+          file = file.path(outfolder,paste(sub,'shift_corrected.csv',sep='_')))
