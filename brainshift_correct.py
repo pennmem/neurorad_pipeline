@@ -23,7 +23,7 @@ def brainshift_correct(loc, sub, outfolder, fsfolder, overwrite=False):
     # sub = 'R1238N'
     # outfolder = '/data10/RAM/subjects/R1238N/imaging/R1238N'
     # fsfolder = '/data/eeg/freesurfer/subjects/R1238N'
-
+    og_dir = os.getcwd()
     corrfile = os.path.join(outfolder, sub + '_shift_corrected.csv')
 
     if os.path.isfile(corrfile) and not overwrite:
@@ -46,7 +46,9 @@ def brainshift_correct(loc, sub, outfolder, fsfolder, overwrite=False):
     savetxt(os.path.join(outfolder, sub + '_shift_rhvertex.csv'), rhvertex, fmt='%s')
     savetxt(os.path.join(outfolder, sub + '_shift_rhname.csv'), rhname, fmt='%s')
     ###
-    
+
+    os.chdir(osp.join(here,'brainshift'))
+
     ### prepare R command and run
 
     cmd_args = "'--args sub=\"{sub}\" outfolder=\"{outfolder}\" fsfolder=\"{fsfolder}\"'".format(
@@ -58,21 +60,23 @@ def brainshift_correct(loc, sub, outfolder, fsfolder, overwrite=False):
     call(' '.join(cmd),shell=True)
     ###
 
-    ### load the corrected output
+    os.chdir(og_dir)
+        ### load the corrected output
     corrected_data = pd.DataFrame.from_csv(corrfile)
-    newnames=corrected_data.labels.data
+    newnames=corrected_data.index.values
+
 
     # put data in loc
-    loc.set_contact_coordinates('fs', newnames, corrected_data[['corrx','corry','corrz']].data, coordinate_type='corrected')
-    loc.set_contact_infos('displacement', newnames, corrected_data.displacement.data)
-    loc.set_contact_infos('closest_vertex_distance', newnames,corrected_data.closestvertexdist.data)
-    loc.set_contact_infos('linked_electrodes', newnames, corrected_data.linkedto.data)
-    loc.set_contact_infos('link_displaced', newnames, corrected_data.linkdisplaced.data)
-    loc.set_contact_infos('group_corrected', newnames, corrected_data['group'].data)
+    loc.set_contact_coordinates('fs', newnames, corrected_data[['corrx','corry','corrz']].values, coordinate_type='corrected')
+    loc.set_contact_infos('displacement', newnames, corrected_data.displaced.values)
+    loc.set_contact_infos('closest_vertex_distance', newnames,corrected_data.closestvertexdist.values)
+    loc.set_contact_infos('linked_electrodes', newnames, corrected_data.linkedto.values)
+    loc.set_contact_infos('link_displaced', newnames, corrected_data.linkdisplaced.values)
+    loc.set_contact_infos('group_corrected', newnames, corrected_data['group'].values)
     loc.set_contact_infos('closest_vertex_coordinate', newnames,
-                          corrected_data[['correctedvertexx','correctedvertexy','correctedvertexz']].data.tolist())
-    loc.set_contact_labels('dk', newnames, DKT)
-    loc.set_contact_coordinates('fsaverage', newnames, fsaverage, coordinate_type='corrected')
+                          corrected_data[['closestvertexx','closestvertexy','closestvertexz']].values.tolist())
+    loc.set_contact_labels('dk', newnames, corrected_data.DKT.values)
+    loc.set_contact_coordinates('fsaverage', newnames, corrected_data[['fsavg_x','fsavg_y','fsavg_z']].values.tolist(), coordinate_type='corrected')
     ###
     os.remove(os.path.join(outfolder, sub + '_shift_coords.csv'))
     os.remove(os.path.join(outfolder, sub + '_shift_eltypes.csv'),)

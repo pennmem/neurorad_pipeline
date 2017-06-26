@@ -5,8 +5,8 @@ for(i in 1:length(args)){
 }
 
 
-source('/home1/dorian.pustina/dykstra/loadFunctions.R')
-source('/home1/dorian.pustina/dykstra/doSnapDykstra_experimental.R')
+source('loadFunctions.R')
+source('doSnapDykstra_experimental.R')
 
 
 #sub = 'R1235E'
@@ -114,17 +114,17 @@ for (g in 1:length(groups)) {
   rowadj = match(theseel, rownames(adjacency))
   coladj = match(theseel, colnames(adjacency))
   thisadjacency = adjacency[rowadj,coladj]
-  
+
   # print info
   cat(paste('Working on group', g, paste0('(',length(theseel),')') ,'...'))
-  
+
   # if depth continue
   if (all(thisxyz$types == 'D')) {
     cat('skipping depth\n')
     next
   }
-  
-  
+
+
   # run dykstra on this lead
   correct = doSnapDykstra(X=as.matrix(thisxyz[ , c('x','y','z')]),
                           V_all=v_duraAll,
@@ -132,35 +132,35 @@ for (g in 1:length(groups)) {
                           xtol_rel=xtol_rel,
                           preSnapCloser = preSnapCloser,
                           preSnapPial = preSnapPial)
-  
+
   # put results in table
-  xyz_orig[xyzlines, 
+  xyz_orig[xyzlines,
            c('corrx','corry','corrz')] = correct$newX
   #
-  xyz_orig[xyzlines, 
+  xyz_orig[xyzlines,
              c('displaced')] = correct$displacement
   #
-  xyz_orig[xyzlines, 
+  xyz_orig[xyzlines,
            c('group')] = g
   #
   linkedto = apply(thisadjacency, 1, function(x) colnames(thisadjacency)[x==1])
   linkedto = sapply(linkedto, paste0, collapse='-')
-  xyz_orig[xyzlines, 
+  xyz_orig[xyzlines,
            c('linkedto')] = linkedto
   #
   linkeddisp=rep(NA,nrow(thisadjacency))
   for (li in 1:length(linkeddisp))
     linkeddisp[li] = paste0(round(correct$gridDeformation[li,][thisadjacency[li,]==1],3), collapse='-')
-  xyz_orig[xyzlines, 
+  xyz_orig[xyzlines,
            c('linkdisplaced')] = linkeddisp
   #
-  xyz_orig[xyzlines, 
+  xyz_orig[xyzlines,
            c('closestvertexdist')] = correct$vertexDistance
   #
   closestvertex = doSnapPial(correct$newX, v_duraAll)
-  xyz_orig[xyzlines, 
+  xyz_orig[xyzlines,
            c('closestvertexx','closestvertexy','closestvertexz')] = closestvertex
-  
+
   cat(paste(format(correct$processTime),'\n'))
 }
 print(paste('ENDING', Sys.time()))
@@ -169,9 +169,16 @@ print(paste('ENDING', Sys.time()))
 # copy depth info from original
 xyz_orig[ xyz_orig$types=='D' , c('closestvertexx','closestvertexy','closestvertexz',
                                   'closestvertexdist','group','displaced')] = c(0,0,0,0,0,0)
-xyz_orig[ xyz_orig$types=='D' , c('corrx','corry','corrz')] = 
+xyz_orig[ xyz_orig$types=='D' , c('corrx','corry','corrz')] =
   xyz_orig[ xyz_orig$types=='D' , c('x','y','z')]
 xyz_orig[ xyz_orig$types=='D' , c('linkedto','linkdisplaced')] = c('N/A','N/A')
 
-write.csv(xyz_orig, 
-          file = file.path(outfolder,paste(sub,'shift_corrected.csv',sep='_')))
+names = findPialNames(xyz_orig[ , c('corrx','corry','corrz')], v_pialAll)
+xyz_orig = data.frame(xyz_orig, DKT=names)
+xyz_orig = data.frame(xyz_orig,
+           getFSaverage(xyz_orig[ ,c('corrx','corry','corrz')], fsfolder))
+
+write.csv(xyz_orig,
+          file = file.path(outfolder, paste0(sub, '_shift_corrected.csv')),
+          row.names = F, quote=F)
+

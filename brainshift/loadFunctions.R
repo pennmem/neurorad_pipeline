@@ -71,4 +71,69 @@ getFreesurferPial <- function(sub, FSbasefolder, LOCbasefolder) {
   rnamevf = file.path(LOCbasefolder, paste0(sub, '_shift_rhvertex.csv'))
   lnamenf = file.path(LOCbasefolder, paste0(sub, '_shift_lhname.csv'))
   rnamenf = file.path(LOCbasefolder, paste0(sub, '_shift_rhname.csv'))
-  if ( any(! file.exists(c(lnamevf,rnamevf,lna
+  if ( any(! file.exists(c(lnamevf,rnamevf,lnamenf, rnamenf)) )) {
+    stop(paste('Cannot find Freesurfer pial surfaces in:',
+               file.path(FSbasefolder, 'surf' )))
+  }
+  lnamev = read.csv(lnamevf, header=F, col.names=c('labels'))
+  lnamen = read.csv(lnamenf, header=F, col.names=c('names'))
+  rnamev = read.csv(rnamevf, header=F, col.names=c('labels'))
+  rnamen = read.csv(rnamenf, header=F, col.names=c('names'))
+  if (nrow(lnamev) != nrow(v_pialL) | nrow(rnamev) != nrow(v_pialR) ) {
+    stop('Mismatched number of vertices in pial surface and python derived labels')
+  }
+  all_lnames = rep(NA, nrow(lnamev))
+  all_rnames = rep(NA, nrow(rnamev))
+  all_lnames[lnamev$labels>=0] =
+    paste0('L_', lnamen$names[lnamev$labels[lnamev$labels>=0]+1 ] )
+  all_rnames[rnamev$labels>=0] =
+    paste0('R_', rnamen$names[rnamev$labels[rnamev$labels>=0]+1 ] )
+
+  finaldf = data.frame( rbind(v_pialL, v_pialR),
+                    c(all_lnames, all_rnames))
+  colnames(finaldf) = c('x','y','z','name')
+
+  return(finaldf)
+}
+#############
+
+# function to get names given a set of
+# coordinates (X) and the data.frame of
+# all pial vertices with names (x,y,z,names)
+findPialNames = function(X, V_pial) {
+  X = matrix(as.matrix(X),ncol=3)
+  V = as.matrix(V_pial[,c('x','y','z')])
+  D = fields::rdist(x2 = V, x1 = X)
+  closestvertices = apply(D,1,which.min)
+  names = V_pial$name[closestvertices]
+  distances = round(apply(D,1,min),2)
+  distances=paste0(distances,'mm')
+
+  return( paste(names,distances,sep='_') )
+}
+
+#############
+# find groups based on attached pairs
+getGroups <- function(allpairs) {
+
+  allpairs = apply(allpairs,2,as.character) # convert to character
+  g = graph_from_edgelist(allpairs, directed=F) # make it a graph
+  clust = clusters(g) # find clusters of connected electrodes
+  betwn = betweenness(g) # find endpoint elextrodes (betweenness=0)
+  groups = list()
+  # put into groups
+  for (i in 1:clust$no) {
+    groups[[i]] = names(clust$membership)[clust$membership==i]
+  }
+  # this commented loop finds the exact order in strip electrodes
+  # but might fail with grid. so we get groups simply from
+  # clust$membership
+  #for (i in 1:clust$no) {
+  #  endpoints = V(g)$name[ clust$membership==i & betwn==0 ]
+  #  groups[[i]] = get.shortest.paths(g, endpoints[1], endpoints[2])$vpath[[1]]
+  #}
+
+  adjacency=get.adjacency(g,sparse=F)
+  return(list(groups=groups, adjacency=adjacency))
+}
+#############

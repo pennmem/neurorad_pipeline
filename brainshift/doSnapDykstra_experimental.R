@@ -160,3 +160,40 @@ doSnapPial = function(X, V_all) {
   newX = V_all[closestvertices, ]
   return(newX)
 }
+
+
+# function to get fsaverage (MNI305)
+# coordinates for the subject
+getFSaverage <- function(X, FSbasefolder) {
+  origf = file.path(FSbasefolder, 'mri','orig.mgz')
+  # Norig
+  temp = system(
+            paste('/usr/global/freesurfer/bin/mri_info' , '--vox2ras', origf),
+                  intern=T)
+  temp = trimws(temp)
+  temp = strsplit(temp, "\\s+")
+  temp = lapply(temp, as.numeric)
+  Norig = do.call('rbind', temp)
+  # Torig
+  temp = system(
+    paste('/usr/global/freesurfer/bin/mri_info' , '--vox2ras-tkr', origf),
+    intern=T)
+  temp = trimws(temp)
+  temp = strsplit(temp, "\\s+")
+  temp = lapply(temp, as.numeric)
+  Torig = do.call('rbind', temp)
+  # xfm
+  xfmf = file.path(FSbasefolder, 'mri','transforms','talairach.xfm')
+  temp = readLines(xfmf)[6:8]
+  temp = gsub(';','',temp)
+  temp = strsplit(temp, "\\s+")
+  temp = lapply(temp, as.numeric)
+  TalXFM = do.call('rbind', temp)
+  # compute transformation
+  X = as.matrix(X)
+  fsaverage = TalXFM%*%Norig%*%solve(Torig)%*%t(cbind(X,1))
+  fsaverage = t(fsaverage)
+  colnames(fsaverage) = c('fsavg_x','fsavg_y','fsavg_z')
+
+  return(fsaverage)
+}
