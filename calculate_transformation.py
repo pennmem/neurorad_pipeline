@@ -69,6 +69,8 @@ def read_and_tx(t1_file, fs_orig_t1, localization):
 
 def insert_transformed_coordinates(localization, files):
     read_and_tx(files['coords_t1'], files['fs_orig_t1'], localization)
+    localization.get_pair_coordinates('fs',pairs=localization.get_pairs(localization.get_lead_names()))
+    localization.get_pair_coordinates('t1_mri',pairs=localization.get_pairs(localization.get_lead_names()))
 
 def file_locations_fs(subject):
     """

@@ -44,6 +44,7 @@ class Localization(object):
         self._contact_dict = {}
         if json_file is not None:
             self.from_json(json_file)
+            self.get_pair_coordinates('ct_voxel',self.get_pairs(self.get_lead_names()))
 
     def from_json(self, json_file):
         """ Loads from a json file """
@@ -60,7 +61,7 @@ class Localization(object):
                 lead['pairs'] = []
             for pair_name in pair_names:
                 if pair_name not in [pair['names'] for pair in lead['pairs']]:
-                    pair = {'names': pair_name, 'atlases': {}, 'info': {}}
+                    pair = {'names': pair_name, 'coordinate_spaces':{},'atlases': {}, 'info': {}}
                     lead['pairs'].append(pair)
 
     def to_json(self, json_file):
@@ -272,6 +273,16 @@ class Localization(object):
             pair_names.extend([pair['names'] for pair in pairs])
         return pair_names
 
+    def set_pair_coordinate(self,space,pair_name,coordinate,type):
+        pair_dict = self._pair_dict_by_name(pair_name)
+        if space not in pair_dict['coordinate_spaces']:
+            pair_dict['coordinate_spaces'][space] = {}
+        pair_dict['coordinate_spaces'][space][type] = [float(c) for c in coordinate.flat]
+
+    def _get_pair_coordinate(self,space,pair_name,type):
+        pair_dict = self._pair_dict_by_name(pair_name)
+        return pair_dict['coordinate_spaces'][space][type]
+
     def get_pair_coordinate(self, coordinate_space, pair, coordinate_type='raw'):
         """ Gets the coordinates at which a pair is located
         :param coordinate_space: one of "fs", "t1_mri", "ct_voxels"...
@@ -280,13 +291,17 @@ class Localization(object):
         """
         self._validate_space(coordinate_space)
         self._validate_type(coordinate_type)
-        contact_name1 = pair[0]
-        contact_name2 = pair[1]
-        coord1 = self.get_contact_coordinate(coordinate_space, contact_name1, coordinate_type)
-        coord2 = self.get_contact_coordinate(coordinate_space, contact_name2, coordinate_type)
-        if coord1 is None or coord2 is None:
-            return None
-        coord = ( np.array(coord1) + np.array(coord2) ) / 2
+        try: 
+            coord = self._get_pair_coordinate(coordinate_space,pair,coordinate_type)
+        except KeyError:
+            contact_name1 = pair[0]
+            contact_name2 = pair[1]
+            coord1 = self.get_contact_coordinate(coordinate_space, contact_name1, coordinate_type)
+            coord2 = self.get_contact_coordinate(coordinate_space, contact_name2, coordinate_type)
+            if coord1 is None or coord2 is None:
+                return None
+            coord = ( np.array(coord1) + np.array(coord2) ) / 2
+            self.set_pair_coordinate(coordinate_space,pair,coord,coordinate_type)
         return np.array(coord)
 
     def get_pair_coordinates(self, coordinate_space, pairs, coordinate_type='raw'):
