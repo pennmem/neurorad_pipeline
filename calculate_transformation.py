@@ -66,9 +66,19 @@ def read_and_tx(t1_file, fs_orig_t1, localization):
         localization.set_contact_coordinate('t1_mri', contact_name, [x, y, z])
 
     log.debug("Done with transform")
+    return Torig,Norig
 
 def insert_transformed_coordinates(localization, files):
     read_and_tx(files['coords_t1'], files['fs_orig_t1'], localization)
+
+
+def invert_transformed_coords(localization,Torig,Norig):
+    for contact in localization.get_contacts():
+        fs_corrected = localization.get_contact_coordinate('fsaverage',contact,coordinate_type='corrected')
+        coords = np.array([float(x) for x in fs_corrected])
+        mri_coords = (Norig*inv(Torig)).dot(coords)
+        localization.set_contact_coordinate('t1_mri',mri_coords.tolist(),coordinate_type='corrected')
+
 
 def file_locations_fs(subject):
     """
