@@ -71,6 +71,21 @@ class Localization(object):
     def to_jsons(self):
         return clean_json_dumps(self._contact_dict, indent=2, sort_keys=True)
 
+    def to_vox_mom(self,fname):
+        csv_out = []
+        for lead in sorted(self.get_lead_names(),cmp=lambda x,y:cmp(x.upper(),y.upper()) ):
+            ltype = self.get_lead_type(lead)
+            n_groups = self._contact_dict['leads'][lead]['n_groups']
+            n_contacts = len(self.get_contacts(lead))
+            for contact in sorted(self.get_contacts(leads=lead)):
+                voxel = self.get_contact_coordinate('ct_voxel',contact)
+                csv_out += "%s\t%s\t%s\t%s\t%s\t%s %s\n"%(
+                    contact.upper(),voxel[0,0],voxel[0,1],voxel[0,2],ltype,n_contacts,n_groups
+                )
+        with open(fname,'w') as vox_mom:
+            vox_mom.writelines(csv_out)
+
+
     def get_lead_names(self):
         """ Returns list of strings of lead names """
         return list(self._contact_dict['leads'].keys())
