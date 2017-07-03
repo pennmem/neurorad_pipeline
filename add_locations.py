@@ -63,6 +63,12 @@ def read_mni(mni_loc, localization):
         localization.set_contact_coordinate('mni', contact_name, [contact_mni_x, contact_mni_y, contact_mni_z])
         log.debug(contact_name)
 
+def read_manual_locations(loc_csv,localization):
+    with open(loc_csv) as lcs:
+        lines = [l.strip().split('\t') for l in lcs]
+    contacts,_,_,labels,_,_,_,_,_ = zip([l for l in lines if l[3]])
+    localization.set_contact_labels('manual',contacts,labels)
+
 
 def add_autoloc(files, localization):
     """
@@ -79,6 +85,9 @@ def add_mni(files, localization):
     :returns: dictionary of form {lead_name: {contact_name1: contact1, contact_name2:contact2, ...}}
     """
     read_mni(files['mni_loc'], localization)
+
+def add_manual_locations(files,localization):
+    read_manual_locations(files['manual_loc'],localization)
 
 def file_locations_loc(subject):
     """
