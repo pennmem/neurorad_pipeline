@@ -66,8 +66,11 @@ def read_mni(mni_loc, localization):
 def read_manual_locations(loc_csv,localization):
     with open(loc_csv) as lcs:
         lines = [l.strip().split('\t') for l in lcs]
-    contacts,_,_,labels,_,_,_,_,_ = zip([l for l in lines if l[3]])
-    localization.set_contact_labels('manual',contacts,labels)
+    contacts,contact_labels = zip(*[(l[0],l[3]) for l in lines[1:] if (len(l)>3) and  l[3] and '-' not in l[0]])
+    localization.set_contact_labels('manual',contacts,contact_labels)
+    pairs,pair_labels = zip(*[(l[0],l[3]) for l in lines[1:] if (len(l)>3) and  l[3] and '-' in l[0]])
+    localization.set_pair_labels('manual',pairs,pair_labels)
+
 
 
 def add_autoloc(files, localization):

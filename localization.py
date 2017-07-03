@@ -37,6 +37,7 @@ class Localization(object):
         'dk',
         'whole_brain',
         'mtl',
+        'manual'
     )
 
     def __init__(self, json_file=None):
