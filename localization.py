@@ -464,7 +464,7 @@ class Localization(object):
             for pair in lead['pairs']:
                 if pair['names'][0] == pair_names[0] and pair['names'][1] == pair_names[1]:
                     return pair
-        return InvalidContactException("Pair {} does not exist!".format(pair_names))
+        raise InvalidContactException("Pair {} does not exist!".format(pair_names))
 
 if __name__ == '__main__':
     from pprint import pprint

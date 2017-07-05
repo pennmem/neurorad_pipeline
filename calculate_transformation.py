@@ -14,8 +14,8 @@ import logging
 from mri_info import *
 from numpy.linalg import inv
 from config import paths
-
-log = logging.getLogger('submission')
+from localization import InvalidContactException
+logger = logging.getLogger('submission')
 
 def xdot(*args):
     """
@@ -36,7 +36,7 @@ def read_and_tx(t1_file, fs_orig_t1, localization):
     # Get freesurfer matrices
     Torig = get_transform(fs_orig_t1, 'vox2ras-tkr')
     Norig = get_transform(fs_orig_t1, 'vox2ras')
-    log.debug("Got transform")
+    logger.debug("Got transform")
     for line in open(t1_file):
         split_line = line.strip().split(',')
 
@@ -55,17 +55,19 @@ def read_and_tx(t1_file, fs_orig_t1, localization):
         # Compute the transformation
         fullmat = Torig * inv(Norig) 
         fscoords = fullmat.dot( coords )
-        log.debug("Transforming {}".format(contact_name))
+        logger.debug("Transforming {}".format(contact_name))
 
         fsx = fscoords[0,0]
         fsy = fscoords[0,1]
         fsz = fscoords[0,2]
 
         # Enter into "leads" dictionary
-        localization.set_contact_coordinate('fs', contact_name, [fsx, fsy, fsz], 'raw')
-        localization.set_contact_coordinate('t1_mri', contact_name, [x, y, z])
-
-    log.debug("Done with transform")
+        try:
+            localization.set_contact_coordinate('fs', contact_name, [fsx, fsy, fsz], 'raw')
+            localization.set_contact_coordinate('t1_mri', contact_name, [x, y, z])
+        except InvalidContactException:
+            logger.warn('Invalid contact %s in file %s'%(contact_name,os.path.basename(t1_file)))
+    logger.debug("Done with transform")
     return Torig,Norig
 
 def insert_transformed_coordinates(localization, files):
@@ -78,9 +80,12 @@ def insert_transformed_coordinates(localization, files):
 def invert_transformed_coords(localization,Torig,Norig):
     for contact in localization.get_contacts():
         fs_corrected = localization.get_contact_coordinate('fsaverage',contact,coordinate_type='corrected')
-        coords = np.array([float(x) for x in fs_corrected])
+        coords = np.array([float(x) for x in fs_corrected[0]]+[1])
         mri_coords = (Norig*inv(Torig)).dot(coords)
-        localization.set_contact_coordinate('t1_mri',mri_coords.tolist(),coordinate_type='corrected')
+        mri_x = mri_coords[0,0]
+        mri_y = mri_coords[0,1]
+        mri_z = mri_coords[0,2]
+        localization.set_contact_coordinate('t1_mri',contact,[mri_x,mri_y,mri_z],coordinate_type='corrected')
 
 
 def file_locations_fs(subject):
@@ -96,7 +101,7 @@ def file_locations_fs(subject):
     return files
 
 if __name__ == '__main__':
-    log.setLevel(logging.DEBUG)
+    logger.setLevel(logging.DEBUG)
     import sys
     leads = build_leads_fs(file_locations(sys.argv[1]))
     leads_as_dict = leads_to_dict(leads)

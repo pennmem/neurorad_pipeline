@@ -81,7 +81,7 @@ for (g in 1:length(groups)) {
   }
   # check no depth/surface mixtures
   thisxyz = xyz_orig[xyzlines,]
-  if (all(thisxyz$types == 'D') | all(thisxyz$types == 'S')) {
+  if (all(thisxyz$types == 'D') | all(thisxyz$types == 'S') | all(thisxyz$types == 'G')) {
     next
   } else {
     stop(paste(
