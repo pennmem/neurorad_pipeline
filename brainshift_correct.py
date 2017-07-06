@@ -28,40 +28,39 @@ def brainshift_correct(loc, sub, outfolder, fsfolder, overwrite=False):
 
     if os.path.isfile(corrfile) and not overwrite:
         print("Corrected csv file already exists for " + sub + ". Use 'overwrite=True' to overwrite results.")
-        return -1
+    else:
+        ### get data and save them to files that R can read
+        elnames = loc.get_contacts()
+        coords = loc.get_contact_coordinates('fs', elnames)
+        eltypes = loc.get_contact_types(elnames)
+        bpairs = loc.get_pairs()
+        [lhvertex, _, lhname] = nb.freesurfer.io.read_annot( os.path.join(fsfolder, 'label', 'lh.aparc.annot') )
+        [rhvertex, _, rhname] = nb.freesurfer.io.read_annot( os.path.join(fsfolder, 'label', 'rh.aparc.annot') )
+        savetxt(os.path.join(outfolder, sub + '_shift_coords.csv'), coords, delimiter=',')
+        savetxt(os.path.join(outfolder, sub + '_shift_eltypes.csv'), eltypes, fmt='%s')
+        savetxt(os.path.join(outfolder, sub + '_shift_bpairs.csv'), bpairs, fmt='%s', delimiter=',')
+        savetxt(os.path.join(outfolder, sub + '_shift_elnames.csv'), elnames, fmt='%s')
+        savetxt(os.path.join(outfolder, sub + '_shift_lhvertex.csv'), lhvertex, fmt='%s')
+        savetxt(os.path.join(outfolder, sub + '_shift_lhname.csv'), lhname, fmt='%s')
+        savetxt(os.path.join(outfolder, sub + '_shift_rhvertex.csv'), rhvertex, fmt='%s')
+        savetxt(os.path.join(outfolder, sub + '_shift_rhname.csv'), rhname, fmt='%s')
+        ###
 
-    ### get data and save them to files that R can read
-    elnames = loc.get_contacts()
-    coords = loc.get_contact_coordinates('fs', elnames)
-    eltypes = loc.get_contact_types(elnames)
-    bpairs = loc.get_pairs()
-    [lhvertex, _, lhname] = nb.freesurfer.io.read_annot( os.path.join(fsfolder, 'label', 'lh.aparc.annot') )
-    [rhvertex, _, rhname] = nb.freesurfer.io.read_annot( os.path.join(fsfolder, 'label', 'rh.aparc.annot') )
-    savetxt(os.path.join(outfolder, sub + '_shift_coords.csv'), coords, delimiter=',')
-    savetxt(os.path.join(outfolder, sub + '_shift_eltypes.csv'), eltypes, fmt='%s')
-    savetxt(os.path.join(outfolder, sub + '_shift_bpairs.csv'), bpairs, fmt='%s', delimiter=',')
-    savetxt(os.path.join(outfolder, sub + '_shift_elnames.csv'), elnames, fmt='%s')
-    savetxt(os.path.join(outfolder, sub + '_shift_lhvertex.csv'), lhvertex, fmt='%s')
-    savetxt(os.path.join(outfolder, sub + '_shift_lhname.csv'), lhname, fmt='%s')
-    savetxt(os.path.join(outfolder, sub + '_shift_rhvertex.csv'), rhvertex, fmt='%s')
-    savetxt(os.path.join(outfolder, sub + '_shift_rhname.csv'), rhname, fmt='%s')
-    ###
+        os.chdir(osp.join(here,'brainshift'))
 
-    os.chdir(osp.join(here,'brainshift'))
+        ### prepare R command and run
 
-    ### prepare R command and run
+        cmd_args = "'--args sub=\"{sub}\" outfolder=\"{outfolder}\" fsfolder=\"{fsfolder}\"'".format(
+            sub=sub,outfolder=outfolder,fsfolder=fsfolder
+        )
+        logfile = os.path.join(outfolder, sub + '_shiftCorrection.Rlog')
+        cmd = ["R", "CMD", "BATCH", "--no-save", "--no-restore", cmd_args,Rcorrection, logfile]
+        logger.debug('Executing shell command %s'%str(cmd))
+        call(' '.join(cmd),shell=True)
+        ###
 
-    cmd_args = "'--args sub=\"{sub}\" outfolder=\"{outfolder}\" fsfolder=\"{fsfolder}\"'".format(
-        sub=sub,outfolder=outfolder,fsfolder=fsfolder
-    )
-    logfile = os.path.join(outfolder, sub + '_shiftCorrection.Rlog')
-    cmd = ["R", "CMD", "BATCH", "--no-save", "--no-restore", cmd_args,Rcorrection, logfile]
-    logger.debug('Executing shell command %s'%str(cmd))
-    call(' '.join(cmd),shell=True)
-    ###
-
-    os.chdir(og_dir)
-        ### load the corrected output
+        os.chdir(og_dir)
+    ### load the corrected output
     corrected_data = pd.DataFrame.from_csv(corrfile)
     newnames=corrected_data.index.values
 
@@ -78,14 +77,14 @@ def brainshift_correct(loc, sub, outfolder, fsfolder, overwrite=False):
     loc.set_contact_labels('dk', newnames, corrected_data.DKT.values)
     loc.set_contact_coordinates('fsaverage', newnames, corrected_data[['fsavg_x','fsavg_y','fsavg_z']].values.tolist(), coordinate_type='corrected')
     ###
-    os.remove(os.path.join(outfolder, sub + '_shift_coords.csv'))
-    os.remove(os.path.join(outfolder, sub + '_shift_eltypes.csv'),)
-    os.remove(os.path.join(outfolder, sub + '_shift_bpairs.csv'))
-    os.remove(os.path.join(outfolder, sub + '_shift_elnames.csv'))
-    
-    os.remove(os.path.join(outfolder, sub + '_shift_lhvertex.csv'))
-    os.remove(os.path.join(outfolder, sub + '_shift_lhname.csv'))
-    os.remove(os.path.join(outfolder, sub + '_shift_rhvertex.csv'))
-    os.remove(os.path.join(outfolder, sub + '_shift_rhname.csv'))
+    # os.remove(os.path.join(outfolder, sub + '_shift_coords.csv'))
+    # os.remove(os.path.join(outfolder, sub + '_shift_eltypes.csv'),)
+    # os.remove(os.path.join(outfolder, sub + '_shift_bpairs.csv'))
+    # os.remove(os.path.join(outfolder, sub + '_shift_elnames.csv'))
+    #
+    # os.remove(os.path.join(outfolder, sub + '_shift_lhvertex.csv'))
+    # os.remove(os.path.join(outfolder, sub + '_shift_lhname.csv'))
+    # os.remove(os.path.join(outfolder, sub + '_shift_rhvertex.csv'))
+    # os.remove(os.path.join(outfolder, sub + '_shift_rhname.csv'))
     
     return loc
