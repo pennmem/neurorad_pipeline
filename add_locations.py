@@ -44,6 +44,21 @@ def read_loc(native_loc, localization):
         except InvalidContactException:
             log.warning('Invalid contact %s in file %s'%(contact_name,os.path.basename(native_loc)))
 
+    for (c1,c2) in localization.get_pairs():
+        c1_loc = localization.get_contact_label('whole_brain',c1)
+        c2_loc = localization.get_contact_label('whole_brain',c2)
+        if c1_loc and (c1_loc==c2_loc or not c2_loc):
+            localization.set_pair_label('whole_brain',(c1,c2),c1_loc)
+        elif c2_loc and not c1_loc:
+            localization.set_pair_label('whole_brain',(c1,c2),c2_loc)
+
+        c1_loc = localization.get_contact_label('mtl', c1)
+        c2_loc = localization.get_contact_label('mtl', c2)
+        if c1_loc and (c1_loc == c2_loc or not c2_loc):
+            localization.set_pair_label('mtl', (c1, c2), c1_loc)
+        elif c2_loc and not c1_loc:
+            localization.set_pair_label('mtl', (c1, c2), c2_loc)
+
 
 def read_mni(mni_loc, localization):
     """
