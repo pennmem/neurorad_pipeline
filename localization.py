@@ -37,6 +37,7 @@ class Localization(object):
         'dk',
         'whole_brain',
         'mtl',
+        'manual',
     )
 
     def __init__(self, json_file=None):
@@ -51,10 +52,17 @@ class Localization(object):
         self._orig_filename = json_file
         for lead_name, lead in self._contact_dict['leads'].items():
             for contact in lead['contacts']:
+                for field in contact:
+                    # Naming convention for voxTool compatibility
+                    if isinstance(field,str) and 'grid' in field:
+                        new_field = field.replace('grid','lead')
+                        contact[new_field] = contact[field]
+                        del contact[field]
                 if 'atlases' not in contact:
                     contact['atlases'] = {}
                 if 'info' not in contact:
                     contact['info'] = {}
+
             pair_names = self._calculate_pairs(lead_name)
             if 'pairs' not in lead:
                 lead['pairs'] = []
@@ -399,12 +407,12 @@ class Localization(object):
         pairs = []
         lead = self._contact_dict['leads'][lead_name]
         for group_i in range(lead['n_groups']):
-            group_contacts = [contact for contact in lead['contacts'] if contact['grid_group'] == group_i]
+            group_contacts = [contact for contact in lead['contacts'] if contact['lead_group'] == group_i]
             for contact1 in group_contacts:
-                gl1 = contact1['grid_loc']
+                gl1 = contact1['lead_loc']
                 contact_pairs = [(contact1['name'], contact2['name']) for contact2 in group_contacts if
-                                 gl1[0] == contact2['grid_loc'][0] and gl1[1] + 1 == contact2['grid_loc'][1] or
-                                 gl1[1] == contact2['grid_loc'][1] and gl1[0] + 1 == contact2['grid_loc'][0]]
+                                 gl1[0] == contact2['lead_loc'][0] and gl1[1] + 1 == contact2['lead_loc'][1] or
+                                 gl1[1] == contact2['lead_loc'][1] and gl1[0] + 1 == contact2['lead_loc'][0]]
                 pairs.extend(contact_pairs)
         return pairs
     

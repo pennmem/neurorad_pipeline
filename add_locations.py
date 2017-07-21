@@ -11,6 +11,7 @@ import logging
 
 from mri_info import *
 from config import paths
+import pandas as pd
 log = logging.getLogger('submission')
 
 def read_loc(native_loc, localization):
@@ -40,6 +41,7 @@ def read_loc(native_loc, localization):
             localization.set_contact_label('mtl', contact_name, loc_list[1])
             log.debug(contact_name + '(MTL)')
 
+
 def read_mni(mni_loc, localization):
     """
     Reads electrodenames_coordinates_native_and_T1.csv, returning a dictionary of leads
@@ -63,10 +65,10 @@ def read_mni(mni_loc, localization):
         localization.set_contact_coordinate('mni', contact_name, [contact_mni_x, contact_mni_y, contact_mni_z])
         log.debug(contact_name)
 
-def read_manual_locations(loc_csv,localization):
-    with open(loc_csv) as lcs:
-        lines = [l.strip().split('\t') for l in lcs]
-    contacts,_,_,labels,_,_,_,_,_ = zip([l for l in lines if l[3]])
+def read_manual_locations(loc_excel, localization):
+    loc_table = pd.read_excel(loc_excel,index_col=0).dropna(subset=['Tag'])
+    contacts = [x for x in loc_table.index.values if '-' not in x]
+    labels = loc_table['Tag'].values
     localization.set_contact_labels('manual',contacts,labels)
 
 
