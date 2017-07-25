@@ -11,6 +11,7 @@ import logging
 
 from mri_info import *
 from config import paths
+import pandas as pd
 log = logging.getLogger('submission')
 from localization import InvalidContactException,InvalidFieldException
 
@@ -60,6 +61,7 @@ def read_loc(native_loc, localization):
             localization.set_pair_label('mtl', (c1, c2), c2_loc)
 
 
+
 def read_mni(mni_loc, localization):
     """
     Reads electrodenames_coordinates_native_and_T1.csv, returning a dictionary of leads
@@ -83,15 +85,11 @@ def read_mni(mni_loc, localization):
         localization.set_contact_coordinate('mni', contact_name, [contact_mni_x, contact_mni_y, contact_mni_z])
         log.debug(contact_name)
 
-def read_manual_locations(loc_csv,localization):
-    with open(loc_csv) as lcs:
-        lines = [l.strip().split('\t') for l in lcs]
-    contacts,contact_labels = zip(*[(l[0],l[3]) for l in lines[1:] if (len(l)>3) and  l[3] and '-' not in l[0]])
-    localization.set_contact_labels('manual',contacts,contact_labels)
-    pairs,pair_labels = zip(*[(l[0],l[3]) for l in lines[1:] if (len(l)>3) and  l[3] and '-' in l[0]])
-    pairs = [p.split('-') for p in pairs]
-    localization.set_pair_labels('manual',pairs,pair_labels)
-
+def read_manual_locations(loc_excel, localization):
+    loc_table = pd.read_excel(loc_excel,index_col=0).dropna(subset=['Tag'])
+    contacts = [x for x in loc_table.index.values if '-' not in x]
+    labels = loc_table['Tag'].values
+    localization.set_contact_labels('manual',contacts,labels)
 
 
 def add_autoloc(files, localization):

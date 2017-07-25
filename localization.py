@@ -37,7 +37,7 @@ class Localization(object):
         'dk',
         'whole_brain',
         'mtl',
-        'manual'
+        'manual',
     )
 
     def __init__(self, json_file=None):
@@ -53,16 +53,23 @@ class Localization(object):
         self._orig_filename = json_file
         for lead_name, lead in self._contact_dict['leads'].items():
             for contact in lead['contacts']:
+                for field in contact:
+                    # Naming convention for voxTool compatibility
+                    if isinstance(field,str) and 'grid' in field:
+                        new_field = field.replace('grid','lead')
+                        contact[new_field] = contact[field]
+                        del contact[field]
                 if 'atlases' not in contact:
                     contact['atlases'] = {}
                 if 'info' not in contact:
                     contact['info'] = {}
+
             pair_names = self._calculate_pairs(lead_name)
             if 'pairs' not in lead:
                 lead['pairs'] = []
             for pair_name in pair_names:
-                if pair_name not in [pair['names'] for pair in lead['pairs']]:
-                    pair = {'names': pair_name, 'coordinate_spaces':{},'atlases': {}, 'info': {}}
+                if pair_name not in [tuple(pair['names']) for pair in lead['pairs']]:
+                    pair = {'names': pair_name, 'atlases': {}, 'info': {}}
                     lead['pairs'].append(pair)
 
     def to_json(self, json_file):
@@ -150,11 +157,12 @@ class Localization(object):
         self._validate_space(coordinate_space)
         self._validate_type(coordinate_type)
         contact_dict = self._contact_dict_by_name(contact)
-        if coordinate_space not in contact_dict['coordinate_spaces']:
+        try:
+            return np.array(contact_dict['coordinate_spaces'][coordinate_space][coordinate_type], ndmin=2)
+        except KeyError:
             output = np.empty((1, 3))
             output[:] = np.NAN
             return output
-        return np.array(contact_dict['coordinate_spaces'][coordinate_space][coordinate_type], ndmin=2)
 
     def get_contact_coordinates(self, coordinate_space, contacts, coordinate_type='raw'):
         """ Gets the coordinates for all provided contacts
@@ -415,12 +423,12 @@ class Localization(object):
         pairs = []
         lead = self._contact_dict['leads'][lead_name]
         for group_i in range(lead['n_groups']):
-            group_contacts = [contact for contact in lead['contacts'] if contact['grid_group'] == group_i]
+            group_contacts = [contact for contact in lead['contacts'] if contact['lead_group'] == group_i]
             for contact1 in group_contacts:
-                gl1 = contact1['grid_loc']
+                gl1 = contact1['lead_loc']
                 contact_pairs = [(contact1['name'], contact2['name']) for contact2 in group_contacts if
-                                 gl1[0] == contact2['grid_loc'][0] and gl1[1] + 1 == contact2['grid_loc'][1] or
-                                 gl1[1] == contact2['grid_loc'][1] and gl1[0] + 1 == contact2['grid_loc'][0]]
+                                 gl1[0] == contact2['lead_loc'][0] and gl1[1] + 1 == contact2['lead_loc'][1] or
+                                 gl1[1] == contact2['lead_loc'][1] and gl1[0] + 1 == contact2['lead_loc'][0]]
                 pairs.extend(contact_pairs)
         return pairs
     
@@ -461,7 +469,7 @@ class Localization(object):
 
     def _pair_dict_by_name(self, pair_names):
         for lead in self._contact_dict['leads'].values():
-            for pair in lead['pairs']:
+            for pair in lead['pairs'].values():
                 if pair['names'][0] == pair_names[0] and pair['names'][1] == pair_names[1]:
                     return pair
         raise InvalidContactException("Pair {} does not exist!".format(pair_names))

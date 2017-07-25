@@ -7,7 +7,7 @@ from submission.log import logger
 from numpy import savetxt
 import pandas as pd
 import nibabel as nb
-
+import numpy as np
 
 def brainshift_correct(loc, sub, outfolder, fsfolder, overwrite=False):
     """ Corrects for brain shift using sequential quadratic
@@ -76,6 +76,9 @@ def brainshift_correct(loc, sub, outfolder, fsfolder, overwrite=False):
                           corrected_data[['closestvertexx','closestvertexy','closestvertexz']].values.tolist())
     loc.set_contact_labels('dk', newnames, corrected_data.DKT.values)
     loc.set_contact_coordinates('fsaverage', newnames, corrected_data[['fsavg_x','fsavg_y','fsavg_z']].values.tolist(), coordinate_type='corrected')
+
+    set_pair_labels(loc,np.concatenate([lhvertex,rhvertex]),np.concatenate([lhname,rhname]))
+
     ###
     # os.remove(os.path.join(outfolder, sub + '_shift_coords.csv'))
     # os.remove(os.path.join(outfolder, sub + '_shift_eltypes.csv'),)
@@ -88,3 +91,11 @@ def brainshift_correct(loc, sub, outfolder, fsfolder, overwrite=False):
     # os.remove(os.path.join(outfolder, sub + '_shift_rhname.csv'))
     
     return loc
+
+
+def set_pair_labels(loc,vertices, labels):
+    loc.get_pair_coordinates('fs')
+    loc.get_pair_coordinates('fsaverage')
+    for pair in loc.get_pairs():
+        closest_vertex_index = np.argmin(np.linalg.norm(vertices-loc.get_pair_coordinates('fs',[pair],'corrected'),axis=0))
+        loc.set_pair_label('dk',pair,labels[closest_vertex_index])

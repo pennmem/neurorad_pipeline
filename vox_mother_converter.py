@@ -32,8 +32,8 @@ class Contact(object):
     
     def to_dict(self):
         d =  {'name': self.name,
-              'grid_group': self.grid_group,
-              'grid_loc': self.grid_loc,
+              'lead_group': self.grid_group,
+              'lead_loc': self.grid_loc,
               'coordinate_spaces':{'ct_voxel': {'raw': self.coords}}
               }
         if self.fs_coords is not None:
