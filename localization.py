@@ -67,7 +67,7 @@ class Localization(object):
             if 'pairs' not in lead:
                 lead['pairs'] = []
             for pair_name in pair_names:
-                if pair_name not in [pair['names'] for pair in lead['pairs']]:
+                if pair_name not in [tuple(pair['names']) for pair in lead['pairs']]:
                     pair = {'names': pair_name, 'atlases': {}, 'info': {}}
                     lead['pairs'].append(pair)
 
@@ -156,11 +156,12 @@ class Localization(object):
         self._validate_space(coordinate_space)
         self._validate_type(coordinate_type)
         contact_dict = self._contact_dict_by_name(contact)
-        if coordinate_space not in contact_dict['coordinate_spaces']:
+        try:
+            return np.array(contact_dict['coordinate_spaces'][coordinate_space][coordinate_type], ndmin=2)
+        except KeyError:
             output = np.empty((1, 3))
             output[:] = np.NAN
             return output
-        return np.array(contact_dict['coordinate_spaces'][coordinate_space][coordinate_type], ndmin=2)
 
     def get_contact_coordinates(self, coordinate_space, contacts, coordinate_type='raw'):
         """ Gets the coordinates for all provided contacts
@@ -453,7 +454,7 @@ class Localization(object):
 
     def _pair_dict_by_name(self, pair_names):
         for lead in self._contact_dict['leads'].values():
-            for pair in lead['pairs']:
+            for pair in lead['pairs'].values():
                 if pair['names'][0] == pair_names[0] and pair['names'][1] == pair_names[1]:
                     return pair
         return InvalidContactException("Pair {} does not exist!".format(pair_names))
