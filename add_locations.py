@@ -13,6 +13,7 @@ from mri_info import *
 from config import paths
 import pandas as pd
 log = logging.getLogger('submission')
+from localization import InvalidContactException,InvalidFieldException
 
 def read_loc(native_loc, localization):
     """
@@ -35,11 +36,15 @@ def read_loc(native_loc, localization):
         loc_list = contact_autoloc.strip().split('/')
 
         # Enter into "leads" dictionary
-        localization.set_contact_label('whole_brain', contact_name, loc_list[0])
-        log.debug(contact_name + '(WB)')
-        if len(loc_list) > 1:
-            localization.set_contact_label('mtl', contact_name, loc_list[1])
-            log.debug(contact_name + '(MTL)')
+        try:
+            localization.set_contact_label('whole_brain', contact_name, loc_list[0])
+            log.debug(contact_name + '(WB)')
+            if len(loc_list) > 1:
+                localization.set_contact_label('mtl', contact_name, loc_list[1])
+                log.debug(contact_name + '(MTL)')
+        except InvalidContactException:
+            log.warning('Invalid contact %s in file %s'%(contact_name,os.path.basename(native_loc)))
+
 
 
 def read_mni(mni_loc, localization):
