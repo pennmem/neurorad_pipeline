@@ -299,6 +299,8 @@ class Localization(object):
 
     def set_pair_coordinate(self,space,pair_name,coordinate,type):
         pair_dict = self._pair_dict_by_name(pair_name)
+        if 'coordinate_spaces' not in pair_dict:
+            pair_dict['coordinate_spaces'] = {}
         if space not in pair_dict['coordinate_spaces']:
             pair_dict['coordinate_spaces'][space] = {}
         pair_dict['coordinate_spaces'][space][type] = [float(c) for c in coordinate.flat]
@@ -328,13 +330,15 @@ class Localization(object):
             self.set_pair_coordinate(coordinate_space,pair,coord,coordinate_type)
         return np.array(coord)
 
-    def get_pair_coordinates(self, coordinate_space, pairs, coordinate_type='raw'):
+    def get_pair_coordinates(self, coordinate_space, pairs=None, coordinate_type='raw'):
         """ Gets the coordinates at which a set of pairs are located
         :param coordinate_space: one of "fs", "t1_mri", "ct_voxels"...
         :param pairs: 2xN list containing the names of contacts in each pair
         :returns: np.array of [[x1,y1,z1],[x2,y2,z2]] for the provided pairs
         """
         coords = []
+        if pairs is None:
+            pairs = self.get_pairs()
         for pair in pairs:
             coords.append(self.get_pair_coordinate(coordinate_space, pair, coordinate_type))
         return np.array(coords)
@@ -469,7 +473,7 @@ class Localization(object):
 
     def _pair_dict_by_name(self, pair_names):
         for lead in self._contact_dict['leads'].values():
-            for pair in lead['pairs'].values():
+            for pair in lead['pairs']:
                 if pair['names'][0] == pair_names[0] and pair['names'][1] == pair_names[1]:
                     return pair
         raise InvalidContactException("Pair {} does not exist!".format(pair_names))

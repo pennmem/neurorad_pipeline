@@ -9,11 +9,6 @@ source('loadFunctions.R')
 source('doSnapDykstra_experimental.R')
 
 
-#sub = 'R1235E'
-#
-#outfolder = '/home1/leond/temp'
-## outfolder = '/data10/RAM/subjects/R1238N/imaging/R1238N'
-#fsfolder = paste('/data/eeg/freesurfer/subjects/',sub,sep='')
 
 libloc = '/home2/RAM_maint/R_packages'
 
@@ -81,7 +76,7 @@ for (g in 1:length(groups)) {
   }
   # check no depth/surface mixtures
   thisxyz = xyz_orig[xyzlines,]
-  if (all(thisxyz$types == 'D') | all(thisxyz$types == 'S') | all(thisxyz$types == 'G')) {
+  if (all(thisxyz$types == 'D') | all(thisxyz$types == 'S') | all(thisxyz$types == 'G')|all(thisxyz$types=='uD') | all(thisxyz$types=='uW')) {
     next
   } else {
     stop(paste(
@@ -119,7 +114,7 @@ for (g in 1:length(groups)) {
   cat(paste('Working on group', g, paste0('(',length(theseel),')') ,'...'))
 
   # if depth continue
-  if (all(thisxyz$types == 'D')) {
+  if (all(thisxyz$types == 'D')| all(thisxyz$types=='uD') | all(thisxyz$types=='uW')) {
     cat('skipping depth\n')
     next
   }
@@ -167,18 +162,23 @@ print(paste('ENDING', Sys.time()))
 
 
 # copy depth info from original
-xyz_orig[ xyz_orig$types=='D' , c('closestvertexx','closestvertexy','closestvertexz',
+xyz_orig[ xyz_orig$types=='D' | xyz_orig$types=='uD' , c('closestvertexx','closestvertexy','closestvertexz',
                                   'closestvertexdist','group','displaced')] = c(0,0,0,0,0,0)
-xyz_orig[ xyz_orig$types=='D' , c('corrx','corry','corrz')] =
-  xyz_orig[ xyz_orig$types=='D' , c('x','y','z')]
-xyz_orig[ xyz_orig$types=='D' , c('linkedto','linkdisplaced')] = c('N/A','N/A')
-
-names = findPialNames(xyz_orig[ , c('corrx','corry','corrz')], v_pialAll)
-xyz_orig = data.frame(xyz_orig, DKT=names)
-xyz_orig = data.frame(xyz_orig,
-           getFSaverage(xyz_orig[ ,c('corrx','corry','corrz')], fsfolder))
+xyz_orig[ xyz_orig$types=='D' | xyz_orig$types=='uD' , c('corrx','corry','corrz')] =
+  xyz_orig[ xyz_orig$types=='D' | xyz_orig$types=='uD' , c('x','y','z')]
+xyz_orig[ xyz_orig$types=='D' | xyz_orig$types=='uD' , c('linkedto','linkdisplaced')] = c('N/A','N/A')
 
 write.csv(xyz_orig,
           file = file.path(outfolder, paste0(sub, '_shift_corrected.csv')),
           row.names = F, quote=F)
+
+
+# names = findPialNames(xyz_orig[ , c('corrx','corry','corrz')], v_pialAll)
+# xyz_orig = data.frame(xyz_orig, DKT=names)
+# xyz_orig = data.frame(xyz_orig,
+#            getFSaverage(xyz_orig[ ,c('corrx','corry','corrz')], fsfolder))
+#
+# write.csv(xyz_orig,
+#           file = file.path(outfolder, paste0(sub, '_shift_corrected.csv')),
+#          row.names = F, quote=F)
 

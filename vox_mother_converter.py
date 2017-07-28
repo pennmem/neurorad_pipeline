@@ -7,7 +7,7 @@ Run:
 to create a voxel_coordinates.json file
 """
 import re
-import numpy as np
+import pandas as pd
 import os
 from collections import defaultdict
 from config import paths
@@ -75,14 +75,15 @@ def read_mother(mother_file):
     """
     # defaultdict allows dictionaries to be created on access so we don't have to check for existence
     leads = defaultdict(dict)
-    for line in open(mother_file):
-        split_line = line.strip().split()
-        contact_name = split_line[0]
+    mother_table = pd.read_csv(mother_file,sep='\t',header=None,names=['contact','x','y','z','type','shape'])
+    for line in mother_table.index:
+        split_line = mother_table.loc[line]
+        contact_name = split_line['contact']
 
         # Get information from the file
-        coords = [int(x) for x in split_line[1:4]]
-        type = split_line[4]
-        size = tuple(int(x) for x in split_line[5:7])
+        coords = [int(x) for x in split_line[['x','y','z']].values]
+        type = split_line['type']
+        size = tuple(int(x) for x in split_line['shape'].split())
 
         # Split out contact name and number
         match = re.match(r'(.+?)(\d+$)', contact_name)

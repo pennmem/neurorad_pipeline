@@ -25,6 +25,8 @@ def brainshift_correct(loc, sub, outfolder, fsfolder, overwrite=False):
     # fsfolder = '/data/eeg/freesurfer/subjects/R1238N'
     og_dir = os.getcwd()
     corrfile = os.path.join(outfolder, sub + '_shift_corrected.csv')
+    [lhvertex, _, lhname] = nb.freesurfer.io.read_annot(os.path.join(fsfolder, 'label', 'lh.aparc.annot'))
+    [rhvertex, _, rhname] = nb.freesurfer.io.read_annot(os.path.join(fsfolder, 'label', 'rh.aparc.annot'))
 
     if os.path.isfile(corrfile) and not overwrite:
         print("Corrected csv file already exists for " + sub + ". Use 'overwrite=True' to overwrite results.")
@@ -34,8 +36,6 @@ def brainshift_correct(loc, sub, outfolder, fsfolder, overwrite=False):
         coords = loc.get_contact_coordinates('fs', elnames)
         eltypes = loc.get_contact_types(elnames)
         bpairs = loc.get_pairs()
-        [lhvertex, _, lhname] = nb.freesurfer.io.read_annot( os.path.join(fsfolder, 'label', 'lh.aparc.annot') )
-        [rhvertex, _, rhname] = nb.freesurfer.io.read_annot( os.path.join(fsfolder, 'label', 'rh.aparc.annot') )
         savetxt(os.path.join(outfolder, sub + '_shift_coords.csv'), coords, delimiter=',')
         savetxt(os.path.join(outfolder, sub + '_shift_eltypes.csv'), eltypes, fmt='%s')
         savetxt(os.path.join(outfolder, sub + '_shift_bpairs.csv'), bpairs, fmt='%s', delimiter=',')
@@ -74,10 +74,28 @@ def brainshift_correct(loc, sub, outfolder, fsfolder, overwrite=False):
     loc.set_contact_infos('group_corrected', newnames, corrected_data['group'].values)
     loc.set_contact_infos('closest_vertex_coordinate', newnames,
                           corrected_data[['closestvertexx','closestvertexy','closestvertexz']].values.tolist())
-    loc.set_contact_labels('dk', newnames, corrected_data.DKT.values)
-    loc.set_contact_coordinates('fsaverage', newnames, corrected_data[['fsavg_x','fsavg_y','fsavg_z']].values.tolist(), coordinate_type='corrected')
+    # loc.set_contact_labels('dk', newnames, corrected_data.DKT.values)
+    # loc.set_contact_coordinates('fsaverage', newnames, corrected_data[['fsavg_x','fsavg_y','fsavg_z']].values.tolist(), coordinate_type='corrected')
 
-    set_pair_labels(loc,np.concatenate([lhvertex,rhvertex]),np.concatenate([lhname,rhname]))
+    lhcoords = nb.freesurfer.read_geometry(osp.join(fsfolder,'surf','lh.pial'))[0]
+    rhcoords = nb.freesurfer.read_geometry(osp.join(fsfolder,'surf','rh.pial'))[0]
+    lhname = ['L_'+x for x in lhname]
+    rhname = ['R_'+x for x in rhname]
+    rhvertex[0] = 0
+    lhvertex[0] = 0
+    rhvertex+= len(lhname)
+    fs_vertices = np.concatenate([lhvertex,rhvertex])
+    fs_names = np.concatenate([lhname,rhname])
+
+    coords = np.concatenate([lhcoords,rhcoords])
+
+    loc.set_contact_labels('dk',newnames,get_dk_labels(
+        loc.get_contact_coordinates('fs',newnames,coordinate_type='corrected'),coords,
+        fs_vertices,fs_names))
+
+    loc.set_pair_labels('dk', loc.get_pairs(), get_dk_labels(
+        loc.get_pair_coordinates('fs',coordinate_type='corrected'), coords, fs_vertices,
+        fs_names))
 
     ###
     # os.remove(os.path.join(outfolder, sub + '_shift_coords.csv'))
@@ -93,9 +111,10 @@ def brainshift_correct(loc, sub, outfolder, fsfolder, overwrite=False):
     return loc
 
 
-def set_pair_labels(loc,vertices, labels):
-    loc.get_pair_coordinates('fs')
-    loc.get_pair_coordinates('fsaverage')
-    for pair in loc.get_pairs():
-        closest_vertex_index = np.argmin(np.linalg.norm(vertices-loc.get_pair_coordinates('fs',[pair],'corrected'),axis=0))
-        loc.set_pair_label('dk',pair,labels[closest_vertex_index])
+def get_dk_labels(electrode_coords,vertex_coords,vertex_inds,labels):
+    electrode_labels = []
+    for coord in electrode_coords:
+        closest_vertex_index = np.argmin(np.linalg.norm(vertex_coords-np.squeeze(coord),axis=1))
+        label = labels[vertex_inds[closest_vertex_index]]
+        electrode_labels.append(label)
+    return electrode_labels
