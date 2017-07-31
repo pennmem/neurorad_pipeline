@@ -99,9 +99,9 @@ class Localization(object):
         return list(self._contact_dict['leads'].keys())
 
     def get_lead_type(self, lead):
-        """ Gets the type of the lead ("S", "G" or "D")
+        """ Gets the type of the lead ("S", "G","D","uD","uW")
         :param lead: the name of a lead
-        :return: "S", "G", or "D"
+        :return: "S", "G","D","uD", or "uW"
         """
         if lead in self._contact_dict['leads']:
             return self._contact_dict['leads'][lead]['type']
@@ -334,7 +334,7 @@ class Localization(object):
         """ Gets the coordinates at which a set of pairs are located
         :param coordinate_space: one of "fs", "t1_mri", "ct_voxels"...
         :param pairs: 2xN list containing the names of contacts in each pair
-        :returns: np.array of [[x1,y1,z1],[x2,y2,z2]] for the provided pairs
+        :returns: np.array of [[x,y,z]] for the provided pairs
         """
         coords = []
         if pairs is None:

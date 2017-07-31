@@ -77,15 +77,20 @@ def insert_transformed_coordinates(localization, files):
     return Torig,Norig
 
 
-def invert_transformed_coords(localization,Torig,Norig):
+def invert_transformed_coords(localization,Torig,Norig,talxfmfile):
+    with open(talxfmfile) as txf:
+        talxfm = np.array([x.strip().strip(';').split() for x in txf.readlines()[-3:]]).astype(float)
     for contact in localization.get_contacts():
-        fs_corrected = localization.get_contact_coordinate('fsaverage',contact,coordinate_type='corrected')
+        fs_corrected = localization.get_contact_coordinate('fs',contact,coordinate_type='corrected')
         coords = np.array([float(x) for x in fs_corrected[0]]+[1])
         mri_coords = (Norig*inv(Torig)).dot(coords)
+        fsaverage_coords = talxfm.dot(mri_coords.T)
         mri_x = mri_coords[0,0]
         mri_y = mri_coords[0,1]
         mri_z = mri_coords[0,2]
         localization.set_contact_coordinate('t1_mri',contact,[mri_x,mri_y,mri_z],coordinate_type='corrected')
+        localization.set_contact_coordinate('fsaverage',contact,[fsaverage_coords[i] for i in range(3)],coordinate_type='corrected')
+    localization.get_pair_coordinates('fsaverage')
 
 
 def file_locations_fs(subject):

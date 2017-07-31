@@ -97,17 +97,6 @@ def brainshift_correct(loc, sub, outfolder, fsfolder, overwrite=False):
         loc.get_pair_coordinates('fs',coordinate_type='corrected'), coords, fs_vertices,
         fs_names))
 
-    ###
-    # os.remove(os.path.join(outfolder, sub + '_shift_coords.csv'))
-    # os.remove(os.path.join(outfolder, sub + '_shift_eltypes.csv'),)
-    # os.remove(os.path.join(outfolder, sub + '_shift_bpairs.csv'))
-    # os.remove(os.path.join(outfolder, sub + '_shift_elnames.csv'))
-    #
-    # os.remove(os.path.join(outfolder, sub + '_shift_lhvertex.csv'))
-    # os.remove(os.path.join(outfolder, sub + '_shift_lhname.csv'))
-    # os.remove(os.path.join(outfolder, sub + '_shift_rhvertex.csv'))
-    # os.remove(os.path.join(outfolder, sub + '_shift_rhname.csv'))
-    
     return loc
 
 
