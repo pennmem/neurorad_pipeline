@@ -45,22 +45,25 @@ def read_loc(native_loc, localization):
         except InvalidContactException:
             log.warning('Invalid contact %s in file %s'%(contact_name,os.path.basename(native_loc)))
 
-    for (c1,c2) in localization.get_pairs():
-        c1_loc = localization.get_contact_label('whole_brain',c1)
-        c2_loc = localization.get_contact_label('whole_brain',c2)
-        if c1_loc and (c1_loc==c2_loc or not c2_loc):
-            localization.set_pair_label('whole_brain',(c1,c2),c1_loc)
-        elif c2_loc and not c1_loc:
-            localization.set_pair_label('whole_brain',(c1,c2),c2_loc)
+def read_pair_loc(native_pair_loc,localization):
+    log.debug('Saved localization for:')
+    with open(native_pair_loc) as npl:
+        for line in npl:
+            pair_name,contact_loc = line.strip().split(',')[:2]
 
-        c1_loc = localization.get_contact_label('mtl', c1)
-        c2_loc = localization.get_contact_label('mtl', c2)
-        if c1_loc and (c1_loc == c2_loc or not c2_loc):
-            localization.set_pair_label('mtl', (c1, c2), c1_loc)
-        elif c2_loc and not c1_loc:
-            localization.set_pair_label('mtl', (c1, c2), c2_loc)
+            pair = [s.strip() for s in pair_name.split('-')]
 
+            loc_list = contact_loc.split('/')
 
+            if loc_list:
+                try:
+                    log.debug(str(pair)+ ' (WB)')
+                    localization.set_pair_label('whole_brain',pair,loc_list[0])
+                    if len(loc_list)>1:
+                        log.debug(pair_name + ' (MTL)')
+                        localization.set_pair_label('mtl',pair,loc_list[1])
+                except InvalidContactException:
+                    log.warning('Invalid pair %s in file %s'%(pair_name,os.path.basename(native_pair_loc)))
 
 def read_mni(mni_loc, localization):
     """
@@ -99,6 +102,10 @@ def add_autoloc(files, localization):
     :returns: dictionary of form {lead_name: {contact_name1: contact1, contact_name2:contact2, ...}}
     """
     read_loc(files['native_loc'], localization)
+    try:
+        read_pair_loc(files['native_pair_loc'],localization)
+    except KeyError:
+        log.warn('No autoloc labels found for bipolar pairs')
 
 def add_mni(files, localization):
     """

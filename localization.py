@@ -1,6 +1,7 @@
 import json
 import numpy as np
 from json_cleaner import clean_json_dump, clean_json_dumps
+from itertools import combinations
 
 class InvalidFieldException(Exception):
     pass
@@ -71,6 +72,7 @@ class Localization(object):
                 if pair_name not in [tuple(pair['names']) for pair in lead['pairs']]:
                     pair = {'names': pair_name, 'atlases': {}, 'info': {}}
                     lead['pairs'].append(pair)
+        return
 
     def to_json(self, json_file):
         """ Dumps to a json file """
@@ -428,13 +430,10 @@ class Localization(object):
         lead = self._contact_dict['leads'][lead_name]
         for group_i in range(lead['n_groups']):
             group_contacts = [contact for contact in lead['contacts'] if contact['lead_group'] == group_i]
-            for contact1 in group_contacts:
-                gl1 = contact1['lead_loc']
-                contact_pairs = [(contact1['name'], contact2['name']) for contact2 in group_contacts if
-                                 gl1[0] == contact2['lead_loc'][0] and gl1[1] + 1 == contact2['lead_loc'][1] or
-                                 gl1[1] == contact2['lead_loc'][1] and gl1[0] + 1 == contact2['lead_loc'][0]]
-                pairs.extend(contact_pairs)
-        return pairs
+            contact_pairs = [(contact1['name'],contact2['name']) for contact1,contact2 in combinations(group_contacts,2)
+                             if is_adjacent(contact1['lead_loc'],contact2['lead_loc'])]
+            pairs.extend(contact_pairs)
+        return [sorted(x) for x in pairs]
     
     @classmethod
     def _validate_space(cls, coordinate_space):
@@ -477,6 +476,10 @@ class Localization(object):
                 if pair['names'][0] == pair_names[0] and pair['names'][1] == pair_names[1]:
                     return pair
         raise InvalidContactException("Pair {} does not exist!".format(pair_names))
+
+def is_adjacent(loc1,loc2):
+    return np.abs(np.subtract(loc1,loc2).sum())==1
+
 
 if __name__ == '__main__':
     from pprint import pprint

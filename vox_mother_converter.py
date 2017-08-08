@@ -145,24 +145,26 @@ def add_grid_loc(leads):
         if type != 'G':
             for contact in lead.values():
                 contact.grid_loc = (1, contact.num)
+                contact.grid_group = 0
 
-        sorted_contact_nums = sorted(lead.keys())
-        previous_grid_size = lead[sorted_contact_nums[0]].grid_size
-        group = 0
-        start_num = 1
-        for num in sorted_contact_nums:
-            contact = lead[num]
-            # If the grid size changes, mark that appropriately
-            if contact.grid_size != previous_grid_size:
-                group += 1
-                start_num = num 
-            # If the number is greater than the grid size, start a new grid group
-            if num - start_num >= contact.grid_size[0] * contact.grid_size[1]:
-                group += 1
-                start_num = num
-            # Add the grid_loc and group
-            contact.grid_loc = ((num-start_num) % contact.grid_size[0], (num-start_num)/contact.grid_size[0])
-            contact.grid_group = group
+        else:
+            sorted_contact_nums = sorted(lead.keys())
+            previous_grid_size = lead[sorted_contact_nums[0]].grid_size
+            group = 0
+            start_num = 1
+            for num in sorted_contact_nums:
+                contact = lead[num]
+                # If the grid size changes, mark that appropriately
+                if contact.grid_size != previous_grid_size:
+                    group += 1
+                    start_num = num
+                # If the number is greater than the grid size, start a new grid group
+                if num - start_num >= contact.grid_size[0] * contact.grid_size[1]:
+                    group += 1
+                    start_num = num
+                # Add the grid_loc and group
+                contact.grid_loc = ((num-start_num) % contact.grid_size[0], (num-start_num)/contact.grid_size[0])
+                contact.grid_group = group
 
 def x2_add_freesurfer_coords(leads, files):
     coords_file = files['fs_coords']
