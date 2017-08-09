@@ -12,7 +12,7 @@ source('doSnapDykstra_experimental.R')
 
 libloc = '/home2/RAM_maint/R_packages'
 
-radius = 40 # radius around electrodes to keep vertices
+radius = 20 # radius around electrodes to keep vertices
 xtol_rel=0.001 # tolerance for optimization 0.01 - 0.000001
 preSnapCloser = F # whether to move entire lead closer to surface before optimization, no deformation produced
 preSnapPial = F # whether to snap each electrode to closest vertex
