@@ -478,7 +478,8 @@ class Localization(object):
         raise InvalidContactException("Pair {} does not exist!".format(pair_names))
 
 def is_adjacent(loc1,loc2):
-    return np.abs(np.subtract(loc1,loc2).sum())==1
+    diff= np.abs(np.subtract(loc1,loc2))
+    return all(diff==np.array([1,0])) or all(diff==np.array([0,1]))
 
 
 if __name__ == '__main__':
