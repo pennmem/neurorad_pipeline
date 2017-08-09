@@ -52,7 +52,7 @@ adjacency = getGroups(pairs)$adjacency
 # load vertices
 v_duraAll = getFreesurferVertices(sub, fsfolder)
 # remove vertices too far
-tempsurf = xyz_orig[ xyz_orig$types=='S', c('x','y','z')]
+tempsurf = xyz_orig[ (xyz_orig$types=='S')|(xyz_orig$types=='G'), c('x','y','z')]
 D = fields::rdist(x1 = tempsurf, x2 = v_duraAll)
 goodvert = apply(D, 2, function(x) any(x<radius))
 v_duraAll = v_duraAll[goodvert,]
