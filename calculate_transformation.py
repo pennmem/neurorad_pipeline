@@ -53,7 +53,7 @@ def read_and_tx(t1_file, fs_orig_t1, localization):
         coords = np.array([float(x), float(y), float(z), 1])
         
         # Compute the transformation
-        fullmat = Torig * inv(Norig) 
+        fullmat = Torig.dot(inv(Norig))
         fscoords = fullmat.dot( coords )
         logger.debug("Transforming {}".format(contact_name))
 
@@ -83,7 +83,7 @@ def invert_transformed_coords(localization,Torig,Norig,talxfmfile):
     for contact in localization.get_contacts():
         fs_corrected = localization.get_contact_coordinate('fs',contact,coordinate_type='corrected')
         coords = np.array([float(x) for x in fs_corrected[0]]+[1])
-        mri_coords = (Norig*inv(Torig)).dot(coords)
+        mri_coords = Norig.dot(inv(Torig)).dot(coords)
         fsaverage_coords = talxfm.dot(mri_coords.T)
         mri_x = mri_coords[0,0]
         mri_y = mri_coords[0,1]
