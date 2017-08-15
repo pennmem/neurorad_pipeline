@@ -52,21 +52,21 @@ def read_and_tx(t1_file, fs_orig_t1,talxfmfile, localization,):
 
         # Create homogeneous coordinate vector
         # coords = float(np.vectorize(np.matrix([x, y, z, 1.0])))
-        coords = np.matrix([float(x), float(y), float(z), 1])
+        coords = np.matrix([float(x), float(y), float(z), 1]).T
         
         # Compute the transformation
         fullmat = Torig * inv(Norig)
         fscoords = fullmat * coords
-        fsaverage_coords = talxfm * coords.T
+        fsaverage_coords = talxfm * coords
         logger.debug("Transforming {}".format(contact_name))
 
-        fsx = fscoords[0,0]
-        fsy = fscoords[0,1]
-        fsz = fscoords[0,2]
+        fsx = fscoords[0]
+        fsy = fscoords[1]
+        fsz = fscoords[2]
 
-        fsavgx = fsaverage_coords[0,0]
-        fsavgy = fsaverage_coords[0,1]
-        fsavgz = fsaverage_coords[0,2]
+        fsavgx = fsaverage_coords[0]
+        fsavgy = fsaverage_coords[1]
+        fsavgz = fsaverage_coords[2]
 
         # Enter into "leads" dictionary
         try:
@@ -89,12 +89,12 @@ def insert_transformed_coordinates(localization, files):
 def invert_transformed_coords(localization,Torig,Norig,talxfm):
     for contact in localization.get_contacts():
         fs_corrected = localization.get_contact_coordinate('fs',contact,coordinate_type='corrected')
-        coords = np.matrix([float(x) for x in fs_corrected[0]]+[1])
+        coords = np.matrix([float(x) for x in fs_corrected[0]]+[1]).T
         mri_coords = Norig * inv(Torig) * coords
-        fsaverage_coords = talxfm * mri_coords.T
-        mri_x = mri_coords[0,0]
-        mri_y = mri_coords[0,1]
-        mri_z = mri_coords[0,2]
+        fsaverage_coords = talxfm * mri_coords
+        mri_x = mri_coords[0]
+        mri_y = mri_coords[1]
+        mri_z = mri_coords[2]
         localization.set_contact_coordinate('t1_mri',contact,[mri_x,mri_y,mri_z],coordinate_type='corrected')
         localization.set_contact_coordinate('fsaverage',contact,[fsaverage_coords[i] for i in range(3)],coordinate_type='corrected')
     localization.get_pair_coordinates('fsaverage')
