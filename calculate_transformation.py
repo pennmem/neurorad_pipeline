@@ -26,7 +26,7 @@ def xdot(*args):
     return reduce(np.dot, args)
 
 
-def read_and_tx(t1_file, fs_orig_t1, localization):
+def read_and_tx(t1_file, fs_orig_t1,talxfmfile, localization,):
     """
     Reads electrodenames_coordinates_native_and_T1.csv, returning a dictionary of leads
     :param t1_file: path to electrodenames_coordinates_native_and_T1.csv file
@@ -36,6 +36,8 @@ def read_and_tx(t1_file, fs_orig_t1, localization):
     # Get freesurfer matrices
     Torig = get_transform(fs_orig_t1, 'vox2ras-tkr')
     Norig = get_transform(fs_orig_t1, 'vox2ras')
+    with open(talxfmfile) as txf:
+        talxfm = np.matrix([x.strip().strip(';').split() for x in txf.readlines()[-3:]]).astype(float)
     logger.debug("Got transform")
     for line in open(t1_file):
         split_line = line.strip().split(',')
@@ -50,41 +52,46 @@ def read_and_tx(t1_file, fs_orig_t1, localization):
 
         # Create homogeneous coordinate vector
         # coords = float(np.vectorize(np.matrix([x, y, z, 1.0])))
-        coords = np.array([float(x), float(y), float(z), 1])
+        coords = np.matrix([float(x), float(y), float(z), 1])
         
         # Compute the transformation
-        fullmat = Torig.dot(inv(Norig))
-        fscoords = fullmat.dot( coords )
+        fullmat = Torig * inv(Norig)
+        fscoords = fullmat * coords
+        fsaverage_coords = talxfm * coords.T
         logger.debug("Transforming {}".format(contact_name))
 
         fsx = fscoords[0,0]
         fsy = fscoords[0,1]
         fsz = fscoords[0,2]
 
+        fsavgx = fsaverage_coords[0,0]
+        fsavgy = fsaverage_coords[0,1]
+        fsavgz = fsaverage_coords[0,2]
+
         # Enter into "leads" dictionary
         try:
             localization.set_contact_coordinate('fs', contact_name, [fsx, fsy, fsz], 'raw')
             localization.set_contact_coordinate('t1_mri', contact_name, [x, y, z])
+            localization.set_contact_coordinate('fsaverage',contact_name,[fsavgx,fsavgy,fsavgz],'raw')
         except InvalidContactException:
             logger.warn('Invalid contact %s in file %s'%(contact_name,os.path.basename(t1_file)))
     logger.debug("Done with transform")
-    return Torig,Norig
+    return Torig,Norig,talxfm
 
 def insert_transformed_coordinates(localization, files):
-    Torig,Norig = read_and_tx(files['coords_t1'], files['fs_orig_t1'], localization)
+    Torig,Norig,talxfm = read_and_tx(files['coords_t1'], files['fs_orig_t1'],files['tal_xfm'], localization)
     localization.get_pair_coordinates('fs',pairs=localization.get_pairs(localization.get_lead_names()))
+    localization.get_pair_coordinates('fsaverage',pairs=localization.get_pairs(localization.get_lead_names()))
     localization.get_pair_coordinates('t1_mri',pairs=localization.get_pairs(localization.get_lead_names()))
-    return Torig,Norig
+    return Torig,Norig,talxfm
 
 
-def invert_transformed_coords(localization,Torig,Norig,talxfmfile):
-    with open(talxfmfile) as txf:
-        talxfm = np.array([x.strip().strip(';').split() for x in txf.readlines()[-3:]]).astype(float)
+def invert_transformed_coords(localization,Torig,Norig,talxfm):
     for contact in localization.get_contacts():
         fs_corrected = localization.get_contact_coordinate('fs',contact,coordinate_type='corrected')
-        coords = np.array([float(x) for x in fs_corrected[0]]+[1])
-        mri_coords = Norig.dot(inv(Torig)).dot(coords)
-        fsaverage_coords = talxfm.dot(mri_coords.T)
+        coords = np.matrix([float(x) for x in fs_corrected[0]]+[1])
+        mri_coords = Norig * inv(Torig) * coords
+        fsaverage_coords = talxfm * mri_coords.T
         mri_x = mri_coords[0,0]
         mri_y = mri_coords[0,1]
         mri_z = mri_coords[0,2]
