@@ -4,7 +4,7 @@ from config import paths
 import argparse
 from nibabel import freesurfer as nf
 
-def test(subject,db_root):
+def test_make_smoothed_surface(subject, db_root):
     temp = subject.split('_')
     localization = '0' if len(temp)==1 else temp[1]
     subject = temp[0]
@@ -31,4 +31,4 @@ if __name__ =='__main__':
     args = parser.parse_args()
     for subject in args.subjects:
         print 'Testing %s'%subject
-        test(subject,'home1/leond')
+        test_make_smoothed_surface(subject, 'home1/leond')
