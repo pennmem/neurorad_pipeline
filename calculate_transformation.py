@@ -15,6 +15,8 @@ from mri_info import *
 from numpy.linalg import inv
 from config import paths
 from localization import InvalidContactException
+from nibabel.freesurfer import read_geometry,write_geometry
+import subprocess
 logger = logging.getLogger('submission')
 
 def xdot(*args):
@@ -77,6 +79,12 @@ def read_and_tx(t1_file, fs_orig_t1,talxfmfile, localization,):
             logger.warn('Invalid contact %s in file %s'%(contact_name,os.path.basename(t1_file)))
     logger.debug("Done with transform")
     return Torig,Norig,talxfm
+
+def map_to_average_brain(localization,files):
+    # Write out appropriate coordinates as FS mesh with nibabel
+
+    subprocess.call(['mri_surf2surf', '--sval',coords_file,'--'])
+
 
 def insert_transformed_coordinates(localization, files):
     Torig,Norig,talxfm = read_and_tx(files['coords_t1'], files['fs_orig_t1'],files['tal_xfm'], localization)

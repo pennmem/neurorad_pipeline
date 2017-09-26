@@ -52,7 +52,7 @@ adjacency = getGroups(pairs)$adjacency
 # load vertices
 v_duraAll = getFreesurferVertices(sub, fsfolder)
 # remove vertices too far
-tempsurf = xyz_orig[ (xyz_orig$types=='S')|(xyz_orig$types=='G'), c('x','y','z')]
+tempsurf = xyz_orig[ (xyz_orig$types=='S')|(xyz_orig$types=='G') |(xyz_orig$types=='uS')|(xyz_orig$types=='uG'), c('x','y','z')]
 D = fields::rdist(x1 = tempsurf, x2 = v_duraAll)
 goodvert = apply(D, 2, function(x) any(x<radius))
 v_duraAll = v_duraAll[goodvert,]
@@ -76,7 +76,7 @@ for (g in 1:length(groups)) {
   }
   # check no depth/surface mixtures
   thisxyz = xyz_orig[xyzlines,]
-  if (all(thisxyz$types == 'D') | all(thisxyz$types == 'S') | all(thisxyz$types == 'G')|all(thisxyz$types=='uD') | all(thisxyz$types=='uW')) {
+  if (all(thisxyz$types == 'D') | all(thisxyz$types == 'S') | all(thisxyz$types == 'G')|all(xyz_orig$types=='uS')|all(xyz_orig$types=='uG')|all(thisxyz$types=='uD') | all(thisxyz$types=='uW')) {
     next
   } else {
     stop(paste(
@@ -162,11 +162,11 @@ print(paste('ENDING', Sys.time()))
 
 
 # copy depth info from original
-xyz_orig[ xyz_orig$types=='D' | xyz_orig$types=='uD' , c('closestvertexx','closestvertexy','closestvertexz',
+xyz_orig[ xyz_orig$types=='D' | xyz_orig$types=='uD'|xyz_orig$types=='uW' , c('closestvertexx','closestvertexy','closestvertexz',
                                   'closestvertexdist','group','displaced')] = c(0,0,0,0,0,0)
-xyz_orig[ xyz_orig$types=='D' | xyz_orig$types=='uD' , c('corrx','corry','corrz')] =
-  xyz_orig[ xyz_orig$types=='D' | xyz_orig$types=='uD' , c('x','y','z')]
-xyz_orig[ xyz_orig$types=='D' | xyz_orig$types=='uD' , c('linkedto','linkdisplaced')] = c('N/A','N/A')
+xyz_orig[ xyz_orig$types=='D' | xyz_orig$types=='uD'|xyz_orig$types=='uW' , c('corrx','corry','corrz')] =
+  xyz_orig[ xyz_orig$types=='D' | xyz_orig$types=='uD' |xyz_orig$types=='uW', c('x','y','z')]
+xyz_orig[ xyz_orig$types=='D' | xyz_orig$types=='uD'|xyz_orig$types=='uW' , c('linkedto','linkdisplaced')] = c('N/A','N/A')
 
 write.csv(xyz_orig,
           file = file.path(outfolder, paste0(sub, '_shift_corrected.csv')),

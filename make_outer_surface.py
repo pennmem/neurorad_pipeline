@@ -55,7 +55,7 @@ def make_smoothed_surface(pial_surface_file):
     main_component_file = outer_surface_file+'-main'
     smoothed_file = outer_surface_file+'-smoothed'
     mri_fill(pial_surface_file,filled_file)
-    make_outer_surface(filled_file,outer_surface_file)
+    make_outer_surface(filled_file,outer_surface_file,12)
     extract_main_component(outer_surface_file,main_component_file)
     smooth_surface(main_component_file,smoothed_file)
 
