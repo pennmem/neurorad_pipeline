@@ -1,10 +1,11 @@
-# neruorad_pipeline
+# neurorad_pipeline
 
 To install dependencies:
 
 Install miniconda for python2.7 (https://www.continuum.io/downloads)
 
     conda install scipy
+    conda install scikit-image
     conda install mayavi
     pip install nibabel
     
@@ -36,13 +37,13 @@ Each pipeline in the submission utility has its own list of input files/links/di
     origin_directory: *IMAGING_SUBJ_DIR
     origin_file: 'electrodenames_coordinates_native.csv'
     destination: 'coordinates_native.csv'
-    
+
   - name: mni_loc
     << : *FILE
     origin_directory: *IMAGING_SUBJ_DIR
     origin_file: 'electrodenames_coordinates_mni.csv'
     destination: 'coordinates_mni.csv'
-    
+
   - name: coords_t1
     << : *FILE
     origin_directory: *IMAGING_SUBJ_DIR
@@ -76,6 +77,7 @@ Each pipeline in the submission utility has its own list of input files/links/di
     origin_file: 'voxel_coordinates.json'
     destination: 'voxel_coordinates.json'
 ```
+(*This snippet is not the complete list of requried files*)
 
 The origin directories for each file are references to directories defined at the top of the yaml file.
 If any other files become necessary for the completion of the pipeline, they should be added here. 
