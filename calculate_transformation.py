@@ -59,22 +59,22 @@ def read_and_tx(t1_file, fs_orig_t1,talxfmfile, localization,):
         # Compute the transformation
         fullmat = Torig * inv(Norig)
         fscoords = fullmat * coords
-        fsaverage_coords = talxfm * coords
+        tal_coords = talxfm * coords
         logger.debug("Transforming {}".format(contact_name))
 
         fsx = fscoords[0]
         fsy = fscoords[1]
         fsz = fscoords[2]
 
-        fsavgx = fsaverage_coords[0]
-        fsavgy = fsaverage_coords[1]
-        fsavgz = fsaverage_coords[2]
+        fsavgx = tal_coords[0]
+        fsavgy = tal_coords[1]
+        fsavgz = tal_coords[2]
 
         # Enter into "leads" dictionary
         try:
             localization.set_contact_coordinate('fs', contact_name, [fsx, fsy, fsz], 'raw')
             localization.set_contact_coordinate('t1_mri', contact_name, [x, y, z])
-            localization.set_contact_coordinate('fsaverage',contact_name,[fsavgx,fsavgy,fsavgz],'raw')
+            localization.set_contact_coordinate('tal',contact_name,[fsavgx,fsavgy,fsavgz],'raw')
         except InvalidContactException:
             logger.warn('Invalid contact %s in file %s'%(contact_name,os.path.basename(t1_file)))
     logger.debug("Done with transform")
@@ -89,7 +89,7 @@ def map_to_average_brain(localization,files):
 def insert_transformed_coordinates(localization, files):
     Torig,Norig,talxfm = read_and_tx(files['coords_t1'], files['fs_orig_t1'],files['tal_xfm'], localization)
     localization.get_pair_coordinates('fs',pairs=localization.get_pairs(localization.get_lead_names()))
-    localization.get_pair_coordinates('fsaverage',pairs=localization.get_pairs(localization.get_lead_names()))
+    localization.get_pair_coordinates('tal',pairs=localization.get_pairs(localization.get_lead_names()))
     localization.get_pair_coordinates('t1_mri',pairs=localization.get_pairs(localization.get_lead_names()))
     return Torig,Norig,talxfm
 
@@ -99,13 +99,13 @@ def invert_transformed_coords(localization,Torig,Norig,talxfm):
         fs_corrected = localization.get_contact_coordinate('fs',contact,coordinate_type='corrected')
         coords = np.matrix([float(x) for x in fs_corrected[0]]+[1]).T
         mri_coords = Norig * inv(Torig) * coords
-        fsaverage_coords = talxfm * mri_coords
+        tal_coords = talxfm * mri_coords
         mri_x = mri_coords[0]
         mri_y = mri_coords[1]
         mri_z = mri_coords[2]
         localization.set_contact_coordinate('t1_mri',contact,[mri_x,mri_y,mri_z],coordinate_type='corrected')
-        localization.set_contact_coordinate('fsaverage',contact,[fsaverage_coords[i] for i in range(3)],coordinate_type='corrected')
-    localization.get_pair_coordinates('fsaverage')
+        localization.set_contact_coordinate('tal',contact,[tal_coords[i] for i in range(3)],coordinate_type='corrected')
+    localization.get_pair_coordinates('tal')
 
 
 def file_locations_fs(subject):

@@ -75,7 +75,7 @@ def brainshift_correct(loc, sub, outfolder, fsfolder, overwrite=False):
     loc.set_contact_infos('closest_vertex_coordinate', newnames,
                           corrected_data[['closestvertexx','closestvertexy','closestvertexz']].values.tolist())
     # loc.set_contact_labels('dk', newnames, corrected_data.DKT.values)
-    # loc.set_contact_coordinates('fsaverage', newnames, corrected_data[['fsavg_x','fsavg_y','fsavg_z']].values.tolist(), coordinate_type='corrected')
+    # loc.set_contact_coordinates('tal', newnames, corrected_data[['fsavg_x','fsavg_y','fsavg_z']].values.tolist(), coordinate_type='corrected')
 
     lhcoords = nb.freesurfer.read_geometry(osp.join(fsfolder,'surf','lh.pial'))[0]
     rhcoords = nb.freesurfer.read_geometry(osp.join(fsfolder,'surf','rh.pial'))[0]
