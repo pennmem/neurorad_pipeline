@@ -18,6 +18,7 @@ class Localization(object):
         't2_mri',
         'mni',
 		'tal',
+        'fsaverage'
     )
     
     VALID_COORDINATE_TYPES = (
