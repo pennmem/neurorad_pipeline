@@ -16,4 +16,4 @@
 ### Upcoming Features:
 
 * Brain-shift corrected MNI coordinates for surface electrodes
-* fsaverage coordinates that are coordinates on the fsaverage brain
+<!-- * fsaverage coordinates that are coordinates on the fsaverage brain -->
