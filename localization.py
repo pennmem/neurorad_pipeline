@@ -29,6 +29,8 @@ class Localization(object):
         'displacement',
         'closest_vertex_distance',
         'closest_vertex_coordinate',
+        'fsaverage_vertex_coordinate',
+        'closest_ortho_vertex_coordinate',
         'linked_electrodes',
         'link_displaced',
         'group_corrected',
@@ -36,6 +38,7 @@ class Localization(object):
 
     VALID_ATLASES = (
         'dk',
+        'hcp',
         'whole_brain',
         'mtl',
         'manual',
