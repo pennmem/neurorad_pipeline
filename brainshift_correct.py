@@ -10,6 +10,10 @@ import nibabel as nb
 import numpy as np
 from sympy import Point3D, Line3D
 
+# Joel added below
+from sympy import Point3D, Line3D
+# Joel added above
+
 def brainshift_correct(loc, sub, outfolder, fsfolder, overwrite=False):
     """ Corrects for brain shift using sequential quadratic
     programming optimization in R (package nloptr).
@@ -29,6 +33,7 @@ def brainshift_correct(loc, sub, outfolder, fsfolder, overwrite=False):
     [lhvertex, _, lhname] = nb.freesurfer.io.read_annot(os.path.join(fsfolder, 'label', 'lh.aparc.annot'))
     [rhvertex, _, rhname] = nb.freesurfer.io.read_annot(os.path.join(fsfolder, 'label', 'rh.aparc.annot'))
     
+
     [lhvertex_hcp, _, lhname_hcp] = nb.freesurfer.io.read_annot(os.path.join(fsfolder, 'label', 'lh.HCP-MMP1.annot'))
     [rhvertex_hcp, _, rhname_hcp] = nb.freesurfer.io.read_annot(os.path.join(fsfolder, 'label', 'rh.HCP-MMP1.annot'))
 
@@ -165,7 +170,8 @@ def get_dk_labels(electrode_coords,vertex_coords,vertex_inds,labels):
     return electrode_labels
 
     # Joel added below to get the closest vertex locations for each of the corrected bipolar pairs
-def get_dk_vertices(electrode_coords,vertex_coords):
+
+def get_dk_vertices(electrode_coords,vertex_coords,vertex_inds,labels):
     electrode_vertices = []
     electrode_vertices_indices = []
     electrode_vertex_distances = []
@@ -225,8 +231,5 @@ def get_fsaverage_coords(coords, lhcoords, loc,fsfolder,subject):
         call(['mri_label2label','--srclabel', osp.join(fsfolder,'bpcoords.label.%s'%hemi), '--srcsubject', subject,
               '--trglabel', 'fsavg_coords.label', '--trgsubject', 'fsaverage', '--regmethod', 'surface', '--hemi', hemi,
               '--trgsurf', 'pial'])
-
-
-
 
 
