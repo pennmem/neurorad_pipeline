@@ -16,4 +16,7 @@
 ### Upcoming Features:
 
 * Brain-shift corrected MNI coordinates for surface electrodes
-<!-- * fsaverage coordinates that are coordinates on the fsaverage brain -->
+
+### Dependencies Introduced:
+* scikit-image
+* sympy
