@@ -303,6 +303,10 @@ class Localization(object):
             pair_names.extend([pair['names'] for pair in pairs])
         return pair_names
 
+    def set_pairs_coordinates(self,space,pairs,coordinates,type):
+        for (p,c) in zip(pairs,coordinates):
+            self.set_pair_coordinate(space,p,c,type)
+
     def set_pair_coordinate(self,space,pair_name,coordinate,type):
         pair_dict = self._pair_dict_by_name(pair_name)
         if 'coordinate_spaces' not in pair_dict:

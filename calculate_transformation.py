@@ -9,7 +9,7 @@ Run:
     python voxcoords_to_fs.py <subject> <out_file>
 to create a voxel_coordinates_fs.json file
 """
-
+import os.path as osp
 import logging
 from mri_info import *
 from numpy.linalg import inv
@@ -18,6 +18,7 @@ from localization import InvalidContactException
 from nibabel.freesurfer import read_geometry
 from scipy.spatial import distance as dist
 logger = logging.getLogger('submission')
+
 
 def xdot(*args):
     """
@@ -80,7 +81,7 @@ def read_and_tx(t1_file, fs_orig_t1,talxfmfile, localization,):
     logger.debug("Done with transform")
     return Torig,Norig,talxfm
 
-def map_to_average_brain(coords,**files):
+def map_to_average_brain(coords,left_pial,right_pial,left_sphere,right_sphere):
     """
     Maps a set of Freesurfer surface coordinates in an individual brain to the equivalent coordinates on the average
     brain.
@@ -94,27 +95,42 @@ def map_to_average_brain(coords,**files):
     :return: {np.ndarray} The matching coordinates in the average brain
     """
     hemispheres = ['left','right'] # For all surfaces, we append the right hemisphere to the left hemisphere
+    fs_subj_surf_dir  = osp.join(paths.rhino_root,'data','eeg','freesurfer','subjects','fsaverage','surf')
+    files = {
+        'left_pial':left_pial,
+        'right_pial':right_pial,
+        'left_sphere':left_sphere,
+        'right_sphere':right_sphere,
+        'left_avg_sphere':osp.join(fs_subj_surf_dir,'lh.sphere.reg'),
+        'right_avg_sphere': osp.join(fs_subj_surf_dir,'rh.sphere.reg'),
+        'left_avg_pial':osp.join(fs_subj_surf_dir,'lh.pial'),
+        'right_avg_pial':osp.join(fs_subj_surf_dir,'rh.pial')
+    }
+
 
     # Find vertex indices on subject's pial surface
-    pial_verts = np.concatenate([read_geometry(files['%s_pial'%h])[0] for h in hemispheres])
+    pial_verts = [read_geometry(files['%s_pial'%h])[0] for h in hemispheres]
 
-    pial_indices = np.argmin( dist.cdist(pial_verts,coords),axis=0)
+    distances = [dist.cdist(v,coords) for v in pial_verts]
+
+    hemisphere = np.min(distances[0],0) < np.min(distances[1],0)
+    pial_indices = [np.argmin(d,0) for d in distances]
 
     # Take those vertices in sphere.reg
-    sphere_verts = np.concatenate([read_geometry(files['%s_reg_sphere'%h])[0] for h in hemispheres])
+    sphere_verts = [read_geometry(files['%s_sphere'%h])[0] for h in hemispheres]
 
-    electrode_sphere_verts = sphere_verts[pial_indices]
+    electrode_sphere_verts = [sv[pi] for (sv,pi) in zip(sphere_verts,pial_indices)]
 
     # Find indices of nearest vertices in fsaverage.?h.sphere.reg
-    avg_sphere_verts = np.concatenate([read_geometry(files['%s_avg_reg_sphere'%h])[0]
-                                       for h in hemispheres])
+    avg_sphere_verts = [read_geometry(files['%s_avg_sphere'%h])[0]
+                                       for h in hemispheres]
 
-    avg_sphere_indices = np.argmin(dist.cdist(avg_sphere_verts,electrode_sphere_verts),axis=0)
+    avg_sphere_indices = [np.argmin(dist.cdist(asv,esv),axis=0) for (asv,esv) in zip(avg_sphere_verts,electrode_sphere_verts)]
 
     # Take those vertices on average pial surface
-    avg_pial_verts  =np.concatenate([read_geometry(files['%s_avg_pial'%h])[0]
-                                       for h in hemispheres])
-    return avg_pial_verts[avg_sphere_indices]
+    avg_pial_verts  =[read_geometry(files['%s_avg_pial'%h])[0]
+                                       for h in hemispheres]
+    return np.where(hemisphere[:,None],*[apv[asi] for apv,asi in zip(avg_pial_verts,avg_sphere_indices)])
 
 
 def insert_transformed_coordinates(localization, files):

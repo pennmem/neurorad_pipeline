@@ -10,9 +10,6 @@ import nibabel as nb
 import numpy as np
 from sympy import Point3D, Line3D
 
-# Joel added below
-from sympy import Point3D, Line3D
-# Joel added above
 
 def brainshift_correct(loc, sub, outfolder, fsfolder, overwrite=False):
     """ Corrects for brain shift using sequential quadratic
@@ -104,7 +101,7 @@ def brainshift_correct(loc, sub, outfolder, fsfolder, overwrite=False):
     coords = np.concatenate([lhcoords,rhcoords])
     
     # Joel added below to get the closest orthogonal to the corrected bipolars
-    add_orthogonal_vertices(loc.get_pairs(), coords, loc)
+    add_orthogonal_vertices(loc.get_pairs(), coords, loc) #TODO: speed up
 
     loc.set_contact_labels('dk',newnames,get_dk_labels(
         loc.get_contact_coordinates('fs',newnames,coordinate_type='corrected'),coords,
@@ -119,7 +116,7 @@ def brainshift_correct(loc, sub, outfolder, fsfolder, overwrite=False):
         loc.get_pair_coordinates('fs',coordinate_type='corrected'), coords, fs_vertices,
         hcp_names))
 
-    get_fsaverage_coords(coords, lhcoords, loc)
+    get_fsaverage_coords(rhcoords, lhcoords, loc,fsfolder,sub)
     
     return loc
 
@@ -171,7 +168,7 @@ def get_dk_labels(electrode_coords,vertex_coords,vertex_inds,labels):
 
     # Joel added below to get the closest vertex locations for each of the corrected bipolar pairs
 
-def get_dk_vertices(electrode_coords,vertex_coords,vertex_inds,labels):
+def get_dk_vertices(electrode_coords,vertex_coords):
     electrode_vertices = []
     electrode_vertices_indices = []
     electrode_vertex_distances = []
@@ -182,54 +179,65 @@ def get_dk_vertices(electrode_coords,vertex_coords,vertex_inds,labels):
         electrode_vertices.append(closest_vertex.tolist())
         electrode_vertices_indices.append(closest_vertex_index)
         electrode_vertex_distances.append(closest_distances)
-    return electrode_vertices, electrode_vertices_indices, electrode_vertex_distances
+    return [np.array(x) for x in electrode_vertices, electrode_vertices_indices, electrode_vertex_distances]
     # Joel added above
     
     # Joel added below to get fsaverage vertex coords
-def get_fsavg_vertices(vertex_inds):
-    lhcoords_avg = nb.freesurfer.read_geometry('/data/eeg/freesurfer/subjects/fsaverage/surf/lh.pial')[0]
-    rhcoords_avg = nb.freesurfer.read_geometry('/data/eeg/freesurfer/subjects/fsaverage/surf/rh.pial')[0]
-    return np.concatenate([lhcoords_avg,rhcoords_avg])
+def get_fsavg_vertices(vertex_inds,hemi='lh'):
+    if hemi=='lh':
+        coords_avg =nb.freesurfer.read_geometry('/data/eeg/freesurfer/subjects/fsaverage/surf/lh.pial')[0]
+    else:
+        coords_avg =nb.freesurfer.read_geometry('/data/eeg/freesurfer/subjects/fsaverage/surf/rh.pial')[0]
+    return coords_avg[vertex_inds]
 
 
 
-def get_fsaverage_coords(coords, lhcoords, loc,fsfolder,subject):
+def get_fsaverage_coords(rhcoords, lhcoords, loc,fsfolder,subject):
+    return None
+    # get surface contacts
+    contacts = np.array(loc.get_contacts())
+    contacts = contacts[np.array([x != 'D' and 'u' not in x for x in loc.get_contact_types(contacts)])] # Surface macros
     # Add closest vertices to corrected bipolars
-    dk_verts, dk_inds, dk_dist = get_dk_vertices(loc.get_pair_coordinates('fs', coordinate_type='corrected'), coords,)
+    
+    dk_verts={}; dk_inds = {};  dk_dist = {} 
+    fsavg_coords_dict = {}
 
-    loc.set_pair_infos('closest_vertex_coordinate', loc.get_pairs(), dk_verts)
-    # Joel added above
-    # Add fs_average vertices for corrected bipolars
-    loc.set_pair_infos('fsaverage_vertex_coordinate', loc.get_pairs(), np.vstack(get_fsavg_vertices(dk_inds)).tolist())
-    # Joel added above
-    # Joel added below to get bipolar label file
-    # dk_dist = loc.get_pair_infos('closest_vertex_distance',loc.get_pairs())
-    with open(osp.join(fsfolder,'bpcoords.label.lh'),'w') as label_file:
-        lh_offset = len(lhcoords)
-        print('Lhcoords length', lh_offset)
-        print(len(dk_inds))
-        print('lh label file for label2label')
-        pairs = loc.get_pairs()
-        counter = 0
-        for i in xrange(len(dk_inds)):
-            if dk_inds[i] <= lh_offset:
-                counter = counter + 1
-                print(pairs[i], dk_inds[i], dk_verts[i][0], dk_verts[i][1], dk_verts[i][2], '0.000000',file=label_file)
+    for(coords,hemi) in zip([rhcoords,lhcoords],('rh','lh')):
+        dk_verts[hemi],dk_inds[hemi],dk_dist[hemi] = get_dk_vertices(loc.get_contact_coordinates('fs',
+                                                                                                 contacts=contacts,
+                                                                                                 coordinate_type='corrected'),
+                                                                     coords, )
+        # loc.set_pair_infos('closest_vertex_coordinate', loc.get_pairs(), dk_verts)
+        # # Joel added above
+        # # Add fs_average vertices for corrected bipolars
+        # loc.set_pair_infos('fsaverage_vertex_coordinate', loc.get_pairs(), np.vstack(get_fsavg_vertices(dk_inds)).tolist())
+        # Joel added above
+        # Joel added below to get bipolar label file
+        # dk_dist = loc.get_pair_infos('closest_vertex_distance',loc.get_pairs())
+        with open(osp.join(fsfolder,'bpcoords.label.%s'%hemi),'w') as label_file:
+            lh_offset = len(lhcoords)
+            print('Lhcoords length', lh_offset)
+            print(len(dk_inds[hemi]))
+            print("BP label file, %s"%hemi)
+            print("#!BP label file, %s" % hemi,file=label_file)
+            print(len(dk_inds[hemi]),file=label_file)
+            print('lh label file for label2label')
+            for i in range(len(dk_inds[hemi])):
+                    print(dk_inds[hemi][i], dk_verts[hemi][i][0], dk_verts[hemi][i][1], dk_verts[hemi][i][2], '0.000000',file=label_file)
 
-    with open(osp.join(fsfolder, 'bpcoords.label.rh'), 'w') as label_file:
-        print(counter)
-        counter = 0
-        print('rh label file for label2label')
-        for i in xrange(len(dk_inds)):
-            if dk_inds[i] > lh_offset:
-                counter = counter + 1
-                print(pairs[i], dk_inds[i] - lh_offset, dk_verts[i][0], dk_verts[i][1], dk_verts[i][2], '0.000000',file=label_file)
-        print(counter)
-    # Joel added above
+        label_file = osp.join(fsfolder,'bpcoords.label.%s'%hemi)
 
-    for hemi in ['lh','rh']:
-        call(['mri_label2label','--srclabel', osp.join(fsfolder,'bpcoords.label.%s'%hemi), '--srcsubject', subject,
-              '--trglabel', 'fsavg_coords.label', '--trgsubject', 'fsaverage', '--regmethod', 'surface', '--hemi', hemi,
+        fsavg_label_file = osp.join(fsfolder, 'fsavg_coords.label.%s' % hemi)
+        call(['mri_label2label','--srclabel', label_file, '--srcsubject', subject,
+              '--trglabel', fsavg_label_file, '--trgsubject', 'fsaverage', '--regmethod', 'surface', '--hemi', hemi,
               '--trgsurf', 'pial'])
+        fsavg_inds = nb.freesurfer.read_label(fsavg_label_file)
+
+        fsavg_coords_dict[hemi] = get_fsavg_vertices(fsavg_inds,hemi)
+
+    fsavg_coords  = np.where(dk_dist['lh']<dk_dist['rh'],fsavg_coords_dict['lh'],fsavg_coords_dict['rh'])
+    loc.set_contact_coordinates('fsaverage',contacts,fsavg_coords,'corrected')
+
+
 
 
