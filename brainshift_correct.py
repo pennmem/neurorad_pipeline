@@ -31,9 +31,6 @@ def brainshift_correct(loc, sub, outfolder, fsfolder, overwrite=False):
     [rhvertex, _, rhname] = nb.freesurfer.io.read_annot(os.path.join(fsfolder, 'label', 'rh.aparc.annot'))
     
 
-    [lhvertex_hcp, _, lhname_hcp] = nb.freesurfer.io.read_annot(os.path.join(fsfolder, 'label', 'lh.HCP-MMP1.annot'))
-    [rhvertex_hcp, _, rhname_hcp] = nb.freesurfer.io.read_annot(os.path.join(fsfolder, 'label', 'rh.HCP-MMP1.annot'))
-
     if os.path.isfile(corrfile) and not overwrite:
         print("Corrected csv file already exists for " + sub + ". Use 'overwrite=True' to overwrite results.")
     else:
@@ -110,15 +107,22 @@ def brainshift_correct(loc, sub, outfolder, fsfolder, overwrite=False):
     loc.set_pair_labels('dk', loc.get_pairs(), get_dk_labels(
         loc.get_pair_coordinates('fs',coordinate_type='corrected'), coords, fs_vertices,
         fs_names))
-    
-    # Add HCP atlas locations to localization.json for corrected bipolars
-    loc.set_pair_labels('hcp', loc.get_pairs(), get_dk_labels(
-        loc.get_pair_coordinates('fs',coordinate_type='corrected'), coords, fs_vertices,
-        hcp_names))
-    # Add HCP atlas locations to localization.json
-    loc.set_contact_labels('hcp', loc.get_contacts(), get_dk_labels(
-        loc.get_contact_coordinates('fs',loc.get_contacts(),coordinate_type='corrected'), coords, fs_vertices,
-        hcp_names))
+
+    try:
+        [lhvertex_hcp, _, lhname_hcp] = nb.freesurfer.io.read_annot(os.path.join(fsfolder, 'label', 'lh.HCP-MMP1.annot'))
+        [rhvertex_hcp, _, rhname_hcp] = nb.freesurfer.io.read_annot(os.path.join(fsfolder, 'label', 'rh.HCP-MMP1.annot'))
+
+
+        # Add HCP atlas locations to localization.json for corrected bipolars
+        loc.set_pair_labels('hcp', loc.get_pairs(), get_dk_labels(
+            loc.get_pair_coordinates('fs',coordinate_type='corrected'), coords, fs_vertices,
+            hcp_names))
+        # Add HCP atlas locations to localization.json
+        loc.set_contact_labels('hcp', loc.get_contacts(), get_dk_labels(
+            loc.get_contact_coordinates('fs',loc.get_contacts(),coordinate_type='corrected'), coords, fs_vertices,
+            hcp_names))
+    except IOError:
+        logger.warn('HCP atlas labels not available')
 
     get_fsaverage_coords(rhcoords, lhcoords, loc,fsfolder,sub)
     
