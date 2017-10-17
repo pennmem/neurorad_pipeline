@@ -115,6 +115,10 @@ def brainshift_correct(loc, sub, outfolder, fsfolder, overwrite=False):
     loc.set_pair_labels('hcp', loc.get_pairs(), get_dk_labels(
         loc.get_pair_coordinates('fs',coordinate_type='corrected'), coords, fs_vertices,
         hcp_names))
+    # Add HCP atlas locations to localization.json
+    loc.set_contact_labels('hcp', loc.get_contacts(), get_dk_labels(
+        loc.get_contact_coordinates('fs',loc.get_contacts(),coordinate_type='corrected'), coords, fs_vertices,
+        hcp_names))
 
     get_fsaverage_coords(rhcoords, lhcoords, loc,fsfolder,sub)
     
@@ -193,7 +197,6 @@ def get_fsavg_vertices(vertex_inds,hemi='lh'):
 
 
 def get_fsaverage_coords(rhcoords, lhcoords, loc,fsfolder,subject):
-    return None
     # get surface contacts
     contacts = np.array(loc.get_contacts())
     contacts = contacts[np.array([x != 'D' and 'u' not in x for x in loc.get_contact_types(contacts)])] # Surface macros
@@ -234,9 +237,9 @@ def get_fsaverage_coords(rhcoords, lhcoords, loc,fsfolder,subject):
         fsavg_inds = nb.freesurfer.read_label(fsavg_label_file)
 
         fsavg_coords_dict[hemi] = get_fsavg_vertices(fsavg_inds,hemi)
-
-    fsavg_coords  = np.where(dk_dist['lh']<dk_dist['rh'],fsavg_coords_dict['lh'],fsavg_coords_dict['rh'])
-    loc.set_contact_coordinates('fsaverage',contacts,fsavg_coords,'corrected')
+    #
+    # fsavg_coords  = np.where(dk_dist['lh']<dk_dist['rh'],fsavg_coords_dict['lh'],fsavg_coords_dict['rh'])
+    # loc.set_contact_coordinates('fsaverage',contacts,fsavg_coords,'corrected') TODO: figure out which coordinates match which contacts
 
 
 
