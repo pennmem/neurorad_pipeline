@@ -93,7 +93,6 @@ def brainshift_correct(loc, sub, outfolder, fsfolder, overwrite=False):
     fs_vertices = np.concatenate([lhvertex,rhvertex])
     fs_names = np.concatenate([lhname,rhname])
     
-    hcp_names = np.concatenate([lhname_hcp,rhname_hcp])
 
     coords = np.concatenate([lhcoords,rhcoords])
     
@@ -112,6 +111,7 @@ def brainshift_correct(loc, sub, outfolder, fsfolder, overwrite=False):
         [lhvertex_hcp, _, lhname_hcp] = nb.freesurfer.io.read_annot(os.path.join(fsfolder, 'label', 'lh.HCP-MMP1.annot'))
         [rhvertex_hcp, _, rhname_hcp] = nb.freesurfer.io.read_annot(os.path.join(fsfolder, 'label', 'rh.HCP-MMP1.annot'))
 
+        hcp_names = np.concatenate([lhname_hcp, rhname_hcp])
 
         # Add HCP atlas locations to localization.json for corrected bipolars
         loc.set_pair_labels('hcp', loc.get_pairs(), get_dk_labels(
