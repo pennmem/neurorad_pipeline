@@ -12,8 +12,10 @@
   introduces dependency on scikit-image
 * Localization information (electrode coordinates and atlas labels)
   stored in JSON format
+* Labels from the HCP atlas
+* Coordinates on average brain computed using Freesurfer registrations
 
-### Upcoming Features:
+### Features Not Yet Implemented:
 
 * Brain-shift corrected MNI coordinates for surface electrodes
 
