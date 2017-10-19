@@ -317,7 +317,10 @@ class Localization(object):
 
     def _get_pair_coordinate(self,space,pair_name,type):
         pair_dict = self._pair_dict_by_name(pair_name)
-        return pair_dict['coordinate_spaces'][space][type]
+        coord = pair_dict['coordinate_spaces'][space][type]
+        if coord  is not None:
+            return coord
+        raise KeyError
 
     def get_pair_coordinate(self, coordinate_space, pair, coordinate_type='raw'):
         """ Gets the coordinates at which a pair is located
