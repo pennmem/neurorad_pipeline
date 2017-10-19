@@ -85,8 +85,6 @@ def brainshift_correct(loc, sub, outfolder, fsfolder, overwrite=False):
 
     lhcoords = nb.freesurfer.read_geometry(osp.join(fsfolder,'surf','lh.pial'))[0]
     rhcoords = nb.freesurfer.read_geometry(osp.join(fsfolder,'surf','rh.pial'))[0]
-    lhname = ['L_'+x for x in lhname]
-    rhname = ['R_'+x for x in rhname]
     rhvertex[0] = 0
     lhvertex[0] = 0
     rhvertex+= len(lhname)
