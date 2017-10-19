@@ -1,5 +1,13 @@
 # neurorad_pipeline
 
+## Installation
+
+See https://github.com/pennmem/event_creation for instructions on how
+to install this repository as part of the submission utility.
+
+If you want to use by itself or integrate it into a different utility,
+simply clone the repository.
+
 To install dependencies:
 
 Install miniconda for python2.7 (https://www.continuum.io/downloads)
@@ -7,6 +15,7 @@ Install miniconda for python2.7 (https://www.continuum.io/downloads)
     conda install scipy
     conda install scikit-image
     conda install mayavi
+    conda install sympy
     pip install nibabel
     
 ## Localization object
@@ -77,7 +86,7 @@ Each pipeline in the submission utility has its own list of input files/links/di
     origin_file: 'voxel_coordinates.json'
     destination: 'voxel_coordinates.json'
 ```
-(*This snippet is not the complete list of requried files*)
+(*This snippet is not the complete list of required files*)
 
 The origin directories for each file are references to directories defined at the top of the yaml file.
 If any other files become necessary for the completion of the pipeline, they should be added here. 
@@ -244,11 +253,7 @@ prompts the user for localization inputs.
 
 ## TODO:
 
-1) Currently the localization pipeline also writes out the desired montage,
- similar to how event_creation handles both ephys and behavioral data.
- It may be desirable to decouple these further, and split them into separate commands.
-
-2) Localizing "extra" bipolar pairs. If one contact is skipped in the middle of a strip or grid, 
+1) Localizing "extra" bipolar pairs. If one contact is skipped in the middle of a strip or grid,
 I think it's fair to use the localization for the skipped electrode as the localization for the
 new bipolar pair. If multiple contacts are skipped, perhaps we shouldn't create a bipolar pair
 at all, as the analysis is now based on a radically different distance. Currently this behavior is
