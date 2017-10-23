@@ -48,12 +48,12 @@ the CML event creationtool (www.github.com/pennmem/event_creation)
     conda env update -f conda_environment.yml
     ```
 
-## Output Format
+## Output Formats
 
-The output of the new neurorad pipeline is a JSON file, `localization.json`,
+The output of the new neurorad pipeline is a JSON file, `localization.json`.
 with the following structure:
 ```json
-{'leads':
+{'leads': 
         LEAD1:{
             'contacts':[
                 {'name':CONTACT_NAME,
@@ -115,6 +115,73 @@ The atlases included in `localization.json` are
 
 Note that not every contact has a location from every atlas.
 
+With the release of the new pipeline, the montage-specific files
+`contacts.json` and `pairs.json` will be built using the information
+in `localization.json`. `contacts.json` has the following format:
+
+```json
+{SUBJECT:
+    {"contacts":{
+        NAME1:{
+            "atlases":{
+                ATLAS_1:{
+                    "region": REGION,
+                    "x": XCOORD,
+                    "y": YCOORD,
+                    "z": ZCOORD,
+                    }
+                ...
+                }
+            "channel":CHANNEL_NUMBER,
+            "code": NAME1,
+            "type": LEAD_TYPE
+            }
+         ...
+         }
+     }
+ }
+ ```
+
+and `pairs.json` has the following format:
+```json
+{SUBJECT:
+    {"pairs":{
+        NAME1:{
+            "atlases":{
+                ATLAS_1:{
+                    "region": REGION,
+                    "x": XCOORD,
+                    "y": YCOORD,
+                    "z": ZCOORD,
+                    }
+                ...
+                }
+            "channel_1":CHANNEL_NUMBER_1,
+            "channel_2":CHANNEL_NUMBER_2,
+            "code": NAME1,
+            "type": LEAD_TYPE
+            }
+         ...
+         }
+     }
+ }
+ ```
+
+In these two files, the atlas names are as follows:
+
+|    Name       | Description | Coordinates | Region label|
+|   :-----:     | :---------- | :---------: | :--------:  |
+| ind           | Uncorrected coordinates in individual Freesurfer space | Yes | Yes |
+| ind.corrected | Brainshift-corrected coordinates in individual Freesurfer space| Yes | No|
+| avg           | Uncorrected coordinates in average Freesurfer space | Yes | No|
+| avg.corrected | Brainshift-corrected coordinates in average Freesurfer space| Yes | No
+| vox           | CT voxels | Yes | No
+| mni           | Uncorrected coordinates in MNI space | Yes | Yes |
+| hcp  | surface atlas labels based on HCP template; <br>labels derived from corrected individual freesurfer coordinates| No | Yes|
+
+Atlases without a region have "null" as the value of "region"; atlases without
+coordinates have NaN as the values of "x", "y", and "z".
+
 ## Avaliable Files
 
 * V2.0 replaces the various tal structs (`talLoc_database_*.mat`) with a
@@ -129,21 +196,6 @@ single file, `localization.json`
 
 #### Electrode Coordinates:
 
-|    Name       | Description |
-|   :-----:     | ----------- |
-| ind           | Uncorrected coordinates in individual Freesurfer space |
-| ind.corrected | Brainshift-corrected coordinates in individual Freesurfer space|
-| avg           | Uncorrected coordinates in average Freesurfer space |
-| avg.corrected | Brainshift-corrected coordinates in average Freesurfer space|
-| vox           | CT voxels |
-| mni           | Uncorrected coordinates in MNI space |
-
-#### Atlas labels:
-| Name | Description |
-| :---:| -------------|
-| mni  | Whole-brain atlas based on MNI parcellation|
-| hcp  | surface atlas labels based on HCP template; <br>labels derived from corrected individual freesurfer coordinates|
-| ind  | Desikan-Killaney atlas labels; <br> labels derived from raw individual freesurfer coordinates|
 
 ### Features:
 
@@ -162,4 +214,4 @@ single file, `localization.json`
     * Brain-shift corrected MNI coordinates for surface electrodes
     * DK atlas locations based on fsaverage coordinates
 
-* "Stim-only" bipolar pairs are not supported
+* "Stim-only" bipolar pairs and non-adjacent bipolar pairs are not supported
