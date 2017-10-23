@@ -52,7 +52,7 @@ the CML event creationtool (www.github.com/pennmem/event_creation)
 
 The output of the new neurorad pipeline is a JSON file, `localization.json`.
 with the following structure:
-```json
+```
 {'leads': 
         LEAD1:{
             'contacts':[
