@@ -119,7 +119,7 @@ With the release of the new pipeline, the montage-specific files
 `contacts.json` and `pairs.json` will be built using the information
 in `localization.json`. `contacts.json` has the following format:
 
-```json
+```
 {SUBJECT:
     {"contacts":{
         NAME1:{
@@ -143,7 +143,7 @@ in `localization.json`. `contacts.json` has the following format:
  ```
 
 and `pairs.json` has the following format:
-```json
+```
 {SUBJECT:
     {"pairs":{
         NAME1:{
