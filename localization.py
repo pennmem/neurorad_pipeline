@@ -46,12 +46,14 @@ class Localization(object):
         'manual',
     )
 
-    def __init__(self, json_file=None):
+    def __init__(self, json_file=None,version=1.0):
         self._orig_filename = json_file
         self._contact_dict = {}
         if json_file is not None:
             self.from_json(json_file)
             self.get_pair_coordinates('ct_voxel',self.get_pairs(self.get_lead_names()))
+        if not self._contact_dict.get('version'):
+            self._contact_dict['version'] = version
 
     def from_json(self, json_file):
         """ Loads from a json file """
