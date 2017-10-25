@@ -210,8 +210,7 @@ single file, `localization.json`
 
 ### Known Issues:
 
-* Certain coordinates and labels are missing:
-    * Brain-shift corrected MNI coordinates for surface electrodes
-    * DK atlas locations based on fsaverage coordinates
 
+* Brain-shift corrected MNI coordinates for surface electrodes are missing
 * "Stim-only" bipolar pairs and non-adjacent bipolar pairs are not supported
+* Adding manual corrections from a spreadsheet requires re-running the entire pipeline
