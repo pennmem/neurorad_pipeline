@@ -95,7 +95,7 @@ def brainshift_correct(loc, sub, outfolder, fsfolder, overwrite=False):
     coords = np.concatenate([lhcoords,rhcoords])
     
     # Joel added below to get the closest orthogonal to the corrected bipolars
-    add_orthogonal_vertices(loc.get_pairs(), coords, loc) #TODO: speed up
+    add_orthogonal_vertices(loc.get_pairs(), coords, loc,outfolder,overwrite) #TODO: speed up
 
     loc.set_contact_labels('dk',newnames,get_dk_labels(
         loc.get_contact_coordinates('fs',newnames,coordinate_type='corrected'),coords,
@@ -126,41 +126,50 @@ def brainshift_correct(loc, sub, outfolder, fsfolder, overwrite=False):
     
     return loc
 
-def add_orthogonal_vertices(bpairs, coords, loc):
-    closest_ortho_pairs = []
-    closest_ortho_verts = []
-    vert_radius = 5
-    for i in bpairs:
-        if loc.get_contact_type(i[0]) in ['G', 'S']:
-            c1 = np.array(loc.get_contact_coordinate('fs', i[0], coordinate_type='corrected'))[0]
-            c2 = np.array(loc.get_contact_coordinate('fs', i[1], coordinate_type='corrected'))[0]
-            b1 = (c1 + c2) / 2
-            l1 = Line3D(c1, b1)
-            verts_near_bipolar = []
-            verts_distances = []
-            for v in coords:
-                v1 = np.array(list(v))
-                vp_dist = np.linalg.norm(b1 - v1)
-                if vp_dist < vert_radius:
-                    verts_near_bipolar.append(v1)
-                    verts_distances.append(vp_dist)
-            if len(verts_near_bipolar) == 0:
+def add_orthogonal_vertices(bpairs, coords, loc,outfolder,force):
+    vertex_file = osp.join(outfolder,'orthogonal_vertices.npy')
+    pair_file = osp.join(outfolder, 'orthogonal_pairs.npy')
+    if osp.isfile(vertex_file) and osp.isfile(pair_file) and not force:
+        closest_ortho_verts = np.load(vertex_file)
+        closest_ortho_pairs = np.load(pair_file)
+    else:
+        closest_ortho_pairs = []
+        closest_ortho_verts = []
+        vert_radius = 5
+        for i in bpairs:
+            if loc.get_contact_type(i[0]) in ['G', 'S']:
+                c1 = np.array(loc.get_contact_coordinate('fs', i[0], coordinate_type='corrected'))[0]
+                c2 = np.array(loc.get_contact_coordinate('fs', i[1], coordinate_type='corrected'))[0]
+                b1 = (c1 + c2) / 2
+                l1 = Line3D(c1, b1)
+                verts_near_bipolar = []
+                verts_distances = []
                 for v in coords:
                     v1 = np.array(list(v))
                     vp_dist = np.linalg.norm(b1 - v1)
-                    if vp_dist < 2 * vert_radius:
+                    if vp_dist < vert_radius:
                         verts_near_bipolar.append(v1)
                         verts_distances.append(vp_dist)
-            print('Found', len(verts_near_bipolar), 'vertices within radius', vert_radius, 'of bipolar')
-            closest_verts = [x for _, x in sorted(zip(verts_distances, verts_near_bipolar))]
-            closest_vert = [0, 0, 0]
-            for vv1 in closest_verts:
-                l2 = Line3D(vv1, b1)
-                if abs(l1.angle_between(l2) - 1.5708) < 0.1:
-                    closest_vert = vv1
-                    break
-            closest_ortho_pairs.append(i)
-            closest_ortho_verts.append(closest_vert)
+                if len(verts_near_bipolar) == 0:
+                    for v in coords:
+                        v1 = np.array(list(v))
+                        vp_dist = np.linalg.norm(b1 - v1)
+                        if vp_dist < 2 * vert_radius:
+                            verts_near_bipolar.append(v1)
+                            verts_distances.append(vp_dist)
+                print('Found', len(verts_near_bipolar), 'vertices within radius', vert_radius, 'of bipolar')
+                closest_verts = [x for _, x in sorted(zip(verts_distances, verts_near_bipolar))]
+                closest_vert = [0, 0, 0]
+                for vv1 in closest_verts:
+                    l2 = Line3D(vv1, b1)
+                    if abs(l1.angle_between(l2) - 1.5708) < 0.1:
+                        closest_vert = vv1
+                        break
+                closest_ortho_pairs.append(i)
+                closest_ortho_verts.append(closest_vert)
+        closest_ortho_verts = np.vstack(closest_ortho_verts)
+        np.save(vertex_file,closest_ortho_verts)
+        np.save(pair_file,closest_ortho_pairs)
     loc.set_pair_infos('closest_ortho_vertex_coordinate', closest_ortho_pairs, np.vstack(closest_ortho_verts).tolist())
 
 
