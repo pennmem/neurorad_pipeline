@@ -49,9 +49,10 @@ def make_smoothed_surface_matlab(pial_surface_file):
 
     return smoothed_file
 
-def make_smoothed_surface(pial_surface_file):
-    filled_file = pial_surface_file+'.filled.mgz'
-    outer_surface_file  = pial_surface_file+'-outer'
+def make_smoothed_surface(pial_surface_file,output_dir=''):
+    psurface_base = osp.basename(pial_surface_file)
+    filled_file = osp.join(output_dir,psurface_base+'.filled.mgz')
+    outer_surface_file  = osp.join(output_dir,psurface_base+'-outer')
     main_component_file = outer_surface_file+'-main'
     smoothed_file = outer_surface_file+'-smoothed'
     mri_fill(pial_surface_file,filled_file)
@@ -63,6 +64,9 @@ def make_smoothed_surface(pial_surface_file):
 
 
 def make_outer_surface(filled_file,output_surface_file,se_diameter = 15):
+    if os.path.isfile(output_surface_file):
+        log.info('Dural surface mesh %s already exists'%os.path.basename(output_surface_file))
+        return
     # read MRI
     volume = nbfs.MGHImage.from_filename(filled_file)
     volume = volume.get_data()
