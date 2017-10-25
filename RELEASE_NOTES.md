@@ -191,10 +191,7 @@ single file, `localization.json`
 
 * `VOX_coords_mother`, the output of voxTool, may be replaced by `voxel_coordinates.json`
 
-* The files `contacts.json` and `pairs.json` will persist in the new pipeline,
-  with the following fields:
-
-#### Electrode Coordinates:
+* The files `contacts.json` and `pairs.json` will persist in the new pipeline
 
 
 ### Features:
