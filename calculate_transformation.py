@@ -15,7 +15,7 @@ from mri_info import *
 from numpy.linalg import inv
 from config import paths
 from localization import InvalidContactException
-from nibabel.freesurfer import read_geometry
+from nibabel.freesurfer import read_geometry,read_annot
 from scipy.spatial import distance as dist
 logger = logging.getLogger('submission')
 
@@ -93,18 +93,21 @@ def map_to_average_brain(coords,left_pial,right_pial,left_sphere,right_sphere):
     :param subject_surf_dir: {str} Path to the directory containing the subject's surface meshes
     :param avg_surf_dir: {str} Path to the directory containing the fsaverage surface meshes
     :return: {np.ndarray} The matching coordinates in the average brain
+    :return: {np.ndarray} The corresponding atlas labels in the average brain
     """
     hemispheres = ['left','right'] # For all surfaces, we append the right hemisphere to the left hemisphere
-    fs_subj_surf_dir  = osp.join(paths.rhino_root,'data','eeg','freesurfer','subjects','fsaverage','surf')
+    fsavg_subj_dir  = osp.join(paths.rhino_root,'data','eeg','freesurfer','subjects','fsaverage',)
     files = {
         'left_pial':left_pial,
         'right_pial':right_pial,
         'left_sphere':left_sphere,
         'right_sphere':right_sphere,
-        'left_avg_sphere':osp.join(fs_subj_surf_dir,'lh.sphere.reg'),
-        'right_avg_sphere': osp.join(fs_subj_surf_dir,'rh.sphere.reg'),
-        'left_avg_pial':osp.join(fs_subj_surf_dir,'lh.pial'),
-        'right_avg_pial':osp.join(fs_subj_surf_dir,'rh.pial')
+        'left_avg_sphere':osp.join(fsavg_subj_dir,'surf','lh.sphere.reg'),
+        'right_avg_sphere': osp.join(fsavg_subj_dir,'surf','rh.sphere.reg'),
+        'left_avg_pial': osp.join(fsavg_subj_dir,'surf','lh.pial'),
+        'right_avg_pial': osp.join(fsavg_subj_dir,'surf','rh.pial'),
+        'left_avg_annot':osp.join(fsavg_subj_dir, 'label','lh.aparc.annot'),
+        'right_avg_annot':osp.join(fsavg_subj_dir,'label','rh.aparc.annot')
     }
 
 
@@ -126,11 +129,18 @@ def map_to_average_brain(coords,left_pial,right_pial,left_sphere,right_sphere):
                                        for h in hemispheres]
 
     avg_sphere_indices = [np.argmin(dist.cdist(asv,esv),axis=0) for (asv,esv) in zip(avg_sphere_verts,electrode_sphere_verts)]
-
     # Take those vertices on average pial surface
-    avg_pial_verts  =[read_geometry(files['%s_avg_pial'%h])[0]
-                                       for h in hemispheres]
-    return np.where(hemisphere[:,None],*[apv[asi] for apv,asi in zip(avg_pial_verts,avg_sphere_indices)])
+    avg_pial_verts  = [read_geometry(files['%s_avg_pial'%h])[0] for h in hemispheres]
+
+    avg_pial_inds,_,avg_pial_labels  =zip(*[read_annot(files['%s_avg_annot'%h])
+                                       for h in hemispheres])
+    avg_pial_labels = [np.array(x) for x in avg_pial_labels]
+
+    new_pial_verts = np.where(hemisphere[:,None],*[apv[asi] for apv,asi in zip(avg_pial_verts,avg_sphere_indices)])
+    new_pial_labels = np.where(hemisphere, *[np.array(apl)[(api[asi])] for apl, api, asi in zip(avg_pial_labels,avg_pial_inds, avg_sphere_indices)])
+    print(new_pial_verts.shape)
+    print(new_pial_labels.shape)
+    return new_pial_verts,new_pial_labels
 
 
 def insert_transformed_coordinates(localization, files):
