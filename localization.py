@@ -39,6 +39,7 @@ class Localization(object):
 
     VALID_ATLASES = (
         'dk',
+        'dkavg',
         'hcp',
         'whole_brain',
         'mtl',
