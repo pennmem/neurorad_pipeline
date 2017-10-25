@@ -91,7 +91,7 @@ def read_mni(mni_loc, localization):
 def read_manual_locations(loc_excel, localization):
     loc_table = pd.read_excel(loc_excel,index_col=0).dropna(subset=['Tag'])
     contacts = [x for x in loc_table.index.values if '-' not in x]
-    labels = loc_table.loc[contacts,'Das Volumetric Atlas Location'].values
+    labels = loc_table.loc[contacts,'Tag'].values
     localization.set_contact_labels('manual',contacts,labels)
 
 
