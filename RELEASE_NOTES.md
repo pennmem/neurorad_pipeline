@@ -194,6 +194,18 @@ single file, `localization.json`
 * The files `contacts.json` and `pairs.json` will persist in the new pipeline
 
 
+
+## 11-8-2017
+
+### Bug Fixes:
+- Fields in pairs.json now agree with previous fields
+- Localization pipeline no longer indexes output, to avoid breaking the
+  index file
+- Version numbers to start from 2.0
+
+
+## 10-30-2017
+
 ### Features:
 
 * Dijkstra brain-shift correction for surface electrodes ported

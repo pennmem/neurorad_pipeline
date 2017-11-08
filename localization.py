@@ -3,6 +3,8 @@ import numpy as np
 from json_cleaner import clean_json_dump, clean_json_dumps
 from itertools import combinations
 
+__version__ = 2.0
+
 class InvalidFieldException(Exception):
     pass
 
@@ -10,6 +12,8 @@ class InvalidContactException(Exception):
     pass
 
 class Localization(object):
+
+
     
     VALID_COORDINATE_SPACES = (
         'ct_voxel',
@@ -46,14 +50,14 @@ class Localization(object):
         'manual',
     )
 
-    def __init__(self, json_file=None,version=1.0):
+    def __init__(self, json_file=None):
         self._orig_filename = json_file
         self._contact_dict = {}
         if json_file is not None:
             self.from_json(json_file)
             self.get_pair_coordinates('ct_voxel',self.get_pairs(self.get_lead_names()))
         if not self._contact_dict.get('version'):
-            self._contact_dict['version'] = version
+            self._contact_dict['version'] = __version__
 
     def from_json(self, json_file):
         """ Loads from a json file """

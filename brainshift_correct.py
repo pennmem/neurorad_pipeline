@@ -27,9 +27,10 @@ def brainshift_correct(loc, sub, outfolder, fsfolder, overwrite=False):
     # fsfolder = '/data/eeg/freesurfer/subjects/R1238N'
     og_dir = os.getcwd()
     corrfile = os.path.join(outfolder, sub + '_shift_corrected.csv')
+
     [lhvertex, _, lhname] = nb.freesurfer.io.read_annot(os.path.join(fsfolder, 'label', 'lh.aparc.annot'))
     [rhvertex, _, rhname] = nb.freesurfer.io.read_annot(os.path.join(fsfolder, 'label', 'rh.aparc.annot'))
-    
+
 
     if os.path.isfile(corrfile) and not overwrite:
         print("Corrected csv file already exists for " + sub + ". Use 'overwrite=True' to overwrite results.")
