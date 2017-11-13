@@ -133,8 +133,8 @@ def add_orthogonal_vertices(bpairs, coords, loc,outfolder,force):
     vertex_file = osp.join(outfolder,'orthogonal_vertices.npy')
     pair_file = osp.join(outfolder, 'orthogonal_pairs.npy')
     if osp.isfile(vertex_file) and osp.isfile(pair_file) and not force:
-        closest_ortho_verts = np.load(vertex_file)
-        closest_ortho_pairs = np.load(pair_file)
+        closest_ortho_verts = np.load(vertex_file).tolist()
+        closest_ortho_pairs = np.load(pair_file).tolist()
     else:
         closest_ortho_pairs = []
         closest_ortho_verts = []
