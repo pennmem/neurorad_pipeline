@@ -95,7 +95,6 @@ def brainshift_correct(loc, sub, outfolder, fsfolder, overwrite=False):
 
     coords = np.concatenate([lhcoords,rhcoords])
 
-    logger.info('pairs: %s'%loc.get_pairs())
     # Joel added below to get the closest orthogonal to the corrected bipolars
     if any([x in ['G','S'] for x in loc.get_lead_types(loc.get_lead_names())]):
         add_orthogonal_vertices(loc.get_pairs(), coords, loc,outfolder,overwrite) #TODO: speed up
@@ -124,8 +123,10 @@ def brainshift_correct(loc, sub, outfolder, fsfolder, overwrite=False):
             hcp_names))
     except IOError:
         logger.warn('HCP atlas labels not available')
-
-    get_fsaverage_coords(rhcoords, lhcoords, loc,fsfolder,sub)
+    try:
+        get_fsaverage_coords(rhcoords, lhcoords, loc,fsfolder,sub)
+    except Exception:
+        logger.warn("Could not add fsaverage coordinates")
     
     return loc
 
@@ -170,7 +171,6 @@ def add_orthogonal_vertices(bpairs, coords, loc,outfolder,force):
                         break
                 closest_ortho_pairs.append(i)
                 closest_ortho_verts.append(closest_vert)
-            closest_ortho_verts = np.vstack(closest_ortho_verts)
         np.save(vertex_file,closest_ortho_verts)
         np.save(pair_file,closest_ortho_pairs)
     loc.set_pair_infos('closest_ortho_vertex_coordinate', closest_ortho_pairs, np.vstack(closest_ortho_verts).tolist())
@@ -233,7 +233,10 @@ def get_fsaverage_coords(rhcoords, lhcoords, loc,fsfolder,subject):
             # Joel added above
             # Joel added below to get bipolar label file
             # dk_dist = loc.get_pair_infos('closest_vertex_distance',loc.get_pairs())
-            with open(osp.join(fsfolder,'bpcoords.label.%s'%hemi),'w') as label_file:
+
+            label_file_name = osp.join(fsfolder,'bpcoords.label.%s'%hemi)
+
+            with open(label_file_name,'w') as label_file:
                 lh_offset = len(lhcoords)
                 print('Lhcoords length', lh_offset)
                 print(len(dk_inds[hemi]))
@@ -244,12 +247,13 @@ def get_fsaverage_coords(rhcoords, lhcoords, loc,fsfolder,subject):
                 for i in range(len(dk_inds[hemi])):
                         print(dk_inds[hemi][i], dk_verts[hemi][i][0], dk_verts[hemi][i][1], dk_verts[hemi][i][2], '0.000000',file=label_file)
 
-            label_file = osp.join(fsfolder,'bpcoords.label.%s'%hemi)
 
             fsavg_label_file = osp.join(fsfolder, 'fsavg_coords.label.%s' % hemi)
-            call(['mri_label2label','--srclabel', label_file, '--srcsubject', subject,
+
+            call(['mri_label2label','--srclabel', label_file_name, '--srcsubject', subject,
                   '--trglabel', fsavg_label_file, '--trgsubject', 'fsaverage', '--regmethod', 'surface', '--hemi', hemi,
                   '--trgsurf', 'pial'])
+
             fsavg_inds = nb.freesurfer.read_label(fsavg_label_file)
 
             fsavg_coords_dict[hemi] = get_fsavg_vertices(fsavg_inds,hemi)
