@@ -2,8 +2,7 @@ import json
 import numpy as np
 from json_cleaner import clean_json_dump, clean_json_dumps
 from itertools import combinations
-
-__version__ = 2.0
+from version import __version__
 
 class InvalidFieldException(Exception):
     pass
