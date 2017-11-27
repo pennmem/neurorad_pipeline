@@ -138,7 +138,8 @@ in `localization.json`. `contacts.json` has the following format:
             }
          ...
          }
-     }
+     },
+"version": VERSION_NUMBER
  }
  ```
 
@@ -163,7 +164,8 @@ and `pairs.json` has the following format:
             }
          ...
          }
-     }
+     },
+ "version": VERSION_NUMBER
  }
  ```
 
@@ -195,6 +197,8 @@ single file, `localization.json`
 
 
 ## 11-22-2017 (v2.0.1)
+### Features:
+- Updates to VoxTool; see https://github.com/pennmem/voxTool/blob/master/CHANGELOG.txt
 ### Bug fixes:
 - Removed assumptions about upper/lower case in contact names
 - jacksheet can now be read even if it uses \r\n line endings
