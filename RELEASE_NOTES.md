@@ -194,17 +194,20 @@ single file, `localization.json`
 * The files `contacts.json` and `pairs.json` will persist in the new pipeline
 
 
+## 11-22-2017 (v2.0.1)
+### Bug fixes:
+- Removed assumptions about upper/lower case in contact names
+- jacksheet can now be read even if it uses \r\n line endings
+- version numbers in contacts/pairs.json now read from neurorad.version
+- jacksheet names now have to agree in case with names in localization file
 
-## 11-8-2017
-
-### Bug Fixes:
 - Fields in pairs.json now agree with previous fields
 - Localization pipeline no longer indexes output, to avoid breaking the
   index file
 - Version numbers to start from 2.0
 
 
-## 10-30-2017
+## 10-30-2017 (v2.0)
 
 ### Features:
 
