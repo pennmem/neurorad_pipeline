@@ -108,6 +108,7 @@ The coordinate spaces included in `localization.json` are:
 
 The atlases included in `localization.json` are
 - dk
+- dkavg
 - hcp
 - whole_brain
 - mtl
@@ -184,6 +185,50 @@ In these two files, the atlas names are as follows:
 Atlases without a region have "null" as the value of "region"; atlases without
 coordinates have NaN as the values of "x", "y", and "z".
 
+## Comparing Atlas/Coordinate Information between v1.x and v2.0
+Over the years a number of things have changed intermittantly in the neurorad pipeline including:
+
+    1. File formats (.mat versus .json)
+    2. The coordinates and atlas locations that are generated and stored
+    3. The algorithm used for brainshift correction
+    
+In v1.x, the MATLAB talstructures existed alongside the pairs/contacts.json files. The json files were generated using a now-deprecated system whose source code is hosted on [Gitlab](https://rhinogit.sas.upenn.edu/jlubken/stim). You will need to contact Hippomanager in order to gain access to this repository. Although these files contained similar information, there is not a direct 1:1 correspondence between them. In v2.0, the pairs/contacts.json files continue to exist, although they are now derived from the localization.json file. The new pairs/contacts.json files are a subset of the information contained in localization.json but modified to miror their v1.x equivalent. The intention was to make the transion to v2.0 as seemless as possible for users relying on these files. The tables below outline the mapping between the matlab talstructures, v1.x pairs/contacts.json, v2.0 pairs/contacts.json, and the v2.0 localization.json file.
+
+### Coordinates
+|   localization.json   | pairs/contacts.json (v2) | pairs/contacts.json (v1) |    MATLAB (v1)   | Description                                                                                                 |
+|:---------------------:|:------------------------:|:------------------------:|:----------------:|-------------------------------------------------------------------------------------------------------------|
+|     ct_voxel (raw)    |            vox           |            vox           |                  | Uncorrected CT voxel coordinates                                                                            |
+|     fs (corrected)    |       ind.corrected      |                          | indvSurf_Dykstra | Brainshift-corrected coordinates in individual Freesurfer space using Dijkstra energy-minimization method    |
+|                       |                          |                          | indvSurf_dural   | Brainshift-corrected coordinates in individual Freesurfer space using dural snapping method                 |
+|                       |                          |         ind.dural        | indvSurf_snap    | Brainshift-corrected coordinates in individual Freesurfer space using snapping method                       |
+|                       |                          |                          | indvSurf_esnap   | Brainshift-corrected coordinates in individual Freesurfer space using deprecated energy-minimization method |
+|        fs (raw)       |            ind           |            ind           | indvSurf         | Uncorrected coordinates in individual Freesurfer space                                                      |
+| fsaverage (corrected) |       avg.corrected      |                          | avgSurf_Dykstra  | Brainshift-corrected coordinates in average Freesurfer space using Dijkstra energy-minimization method       |
+|                       |                          |         avg.snap         | avgSurf_dural    | Brainshift-corrected coordinates in average Freesurfer space                                                |
+|                       |                          |         avg.dural        | avgSurf_snap     | Brainshift-corrected coordinates in average Freesurfer space                                                |
+|                       |                          |                          | avgSurf_esnap    | Brainshift-corrected coordinates in average Freesurfer space using deprecated enery-minimization method     |
+|    fsaverage (raw)    |            avg           |            avg           | avgSurf          | Uncorrected coordinates in average Freesurfer space                                                         |
+|   t1_mri (corrected)  |                          |                          |                  | Brainshift-corrected T1-weighted MRI coordinates                                                            |
+|      t1_mri (raw)     |                          |                          |                  | Uncorrected T1-weighted MRI coordinates                                                                     |
+|    tal (corrected)    |                          |                          |                  | Brainshift-corrected coordinates in talairach space                                                         |
+|       tal (raw)       |                          |            tal           | tal              | Uncorrected coordinates in talairach space                                                                  |
+| mni (corrected)       |                          |                          |                  | Brainshift-corrected coordinates in MNI space                                                               |
+| mni (raw)             |                          |                          |                  | Uncorrected coordinates in MNI space                                                                        |
+### Atlases
+| localization.json | pairs/contacts.json (v2) | pairs/contacts.json (v1) | MATLAB (v1) |                                                       Description                                                       |
+|:-----------------:|:------------------------:|:------------------------:|:-----------:|:-----------------------------------------------------------------------------------------------------------------------:|
+|                   |            ind           |            ind           |             | Surface labels using the Desikan-Killilany atlas dervied from uncorrected individual Freesurfer coordinates             |
+|         dk        |            dk            |            dk            |             | Surface labels using the Desikan-Killiany atlas derived from the corrected individual freesurfer coordinates            |
+|       dkavg       |                          |                          |             | Surface labels using the Desikan-Killiany atlas derived from the corrected average  Freesurfer coordinates              |
+|                   |            mni           |            mni           |             |                                                                                                                         |
+|        hcp        |                          |                          |             | Surface labels based on the Human Connectome Project atlas derived from the corrected individual Freesurfer coordinates |
+|    whole_brain    |            wb            |            wb            |             |                                                                                                                         |
+|        mtl        |                          |                          |             |                                                                                                                         |
+|       manual      |                          |                          |             | Manually assigned labels                                                                                                |
+|                   |           stein          |                          |             | Labels assigned during localization by neuroradiologist Joel Stein                                                      |
+|                   |            das           |                          |             | Labels assigned during localization by neuroradiologist Sandy Das                                                       |
+|                   |                          |                          |  Loc1-Loc6  | Labels based on the talairach hierarchy (hemisphere, lobe, gyrus, tissue-type, cell type)                               |
+|                   |                          |                          |    LocTag   | Labels assigned during localization by a neuroradiologist                                                               |
 ## Avaliable Files
 
 * V2.0 replaces the various tal structs (`talLoc_database_*.mat`) with a
