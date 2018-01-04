@@ -64,3 +64,16 @@ def t1_mri_to_mni(t1_mri_coords, imaging_root, subject, name=''):
     corrected_mni_coordinates = np.loadtxt(mni_filename,delimiter=',',skiprows=1)
     corrected_mni_coordinates[:,:2] *= -1
     return corrected_mni_coordinates[:,:3]
+
+
+def add_corrected_mni_cordinates(localization,imaging_root,subject):
+    """
+    Adds corrected mni coordinates to a localization. Requires that corrected T1 coordinates be present.
+    :param localization:
+    :param imaging_root:
+    :param subject:
+    :return:
+    """
+    corrected_t1_coordinates = localization.get_contact_coordinates('t1_mri',coordinate_type='corrected')
+    corrected_mni_coordinates = t1_mri_to_mni(corrected_t1_coordinates,imaging_root,subject,'corrected')
+    localization.set_contact_coordinates('mni',corrected_mni_coordinates,contacts=localization.get_contacts(),coordinate_type='corrected')
