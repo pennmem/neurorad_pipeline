@@ -1,6 +1,6 @@
 from nibabel import nifti1
 import numpy as np
-from .config import Paths
+from config import Paths
 import subprocess
 import os.path as osp
 
@@ -23,7 +23,7 @@ def map_coords(coordinates,nifti_file):
     return ras_coords[:3,:]
 
 
-def mni_from_t1_mri(t1_mri_coords,imaging_root,subject,name=''):
+def t1_mri_to_mni(t1_mri_coords, imaging_root, subject, name=''):
     """
     Uses the ANTS binaries identified in config.Paths to map T1 MRI coordinates into MNI space,
     via a set of transformations specified by files located at imaging_root
@@ -45,20 +45,22 @@ def mni_from_t1_mri(t1_mri_coords,imaging_root,subject,name=''):
     if name:
         name = name + '_'
 
-    mri_filename = osp.join(imaging_root,'electrode_coordinates_%st1.csv'%name)
+    mri_filename = osp.join(imaging_root,'electrode_coordinates_%sT1.csv'%name)
     with open(mri_filename,'w') as mri_coords_file:
-        mri_coords_file.write('x,y,z,t')
+        mri_coords_file.write('x,y,z,t\n')
         for line in t1_mri_coords:
-            mri_coords_file.write(','.join(['{:.4f}'.format(x) for x in line])+',0')
-    mni_filename = mri_filename.replace('t1','mni_from_t1')
-    subprocess.check_call([antsApplyTransform, '-d','3','-i',mri_filename,'-o',mni_filename,
+            mri_coords_file.write(','.join(['{:.4f}'.format(x) for x in line])+',0\n')
+    tmp_file = osp.join(imaging_root,'tmp.csv')
+    mni_filename = mri_filename.replace('T1','mni_from_T1')
+    subprocess.check_call([antsApplyTransform,'-d','3','-i',mri_filename,'-o',tmp_file,'-t',t1_to_itk])
+    args = [antsApplyTransform, '-d','3','-i',tmp_file,'-o',mni_filename,
                      '-t','[%s,1]'%t1_to_itk,
                     '-t', '[%s,1]'%template_to_subject_affine,
                     '-t', template_to_subject_warp,
                     '-t','[%s,1]'%faffine,
-                    '-t', finversewarp,
-                    '-t',t1_to_itk]
-                    )
+                    '-t', finversewarp]
+    print 'Calling: ', ' '.join(args)
+    subprocess.check_call(args)
     corrected_mni_coordinates = np.loadtxt(mni_filename,delimiter=',',skiprows=1)
     corrected_mni_coordinates[:,:2] *= -1
     return corrected_mni_coordinates[:,:3]
