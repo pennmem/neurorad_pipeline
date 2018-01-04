@@ -176,12 +176,14 @@ class Localization(object):
             output[:] = np.NAN
             return output
 
-    def get_contact_coordinates(self, coordinate_space, contacts, coordinate_type='raw'):
+    def get_contact_coordinates(self, coordinate_space, contacts=None, coordinate_type='raw'):
         """ Gets the coordinates for all provided contacts
         :param coordinate_space: one of "fs", "t1_mri", "ct_voxels"...
         :param contacts: list of contact names
         :returns: np.array of [[x1, y1, z1], [x2, y2, z2], ...] for each contact
         """
+        if contacts is None:
+            contacts = self.get_contacts()
         coordinates = np.array([[], [], []]).T
         for contact in contacts:
             coordinate = self.get_contact_coordinate(coordinate_space, contact, coordinate_type)
