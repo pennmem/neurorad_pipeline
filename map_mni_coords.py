@@ -76,4 +76,4 @@ def add_corrected_mni_cordinates(localization,imaging_root,subject):
     """
     corrected_t1_coordinates = localization.get_contact_coordinates('t1_mri',coordinate_type='corrected')
     corrected_mni_coordinates = t1_mri_to_mni(corrected_t1_coordinates,imaging_root,subject,'corrected')
-    localization.set_contact_coordinates('mni',corrected_mni_coordinates,contacts=localization.get_contacts(),coordinate_type='corrected')
+    localization.set_contact_coordinates('mni',localization.get_contacts(),corrected_mni_coordinates,coordinate_type='corrected')
