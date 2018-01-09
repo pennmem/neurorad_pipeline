@@ -2,7 +2,7 @@ from __future__ import print_function
 
 import os
 import os.path as osp
-from subprocess import call
+from subprocess import call,Popen
 from submission.log import logger
 from numpy import savetxt
 import pandas as pd
@@ -60,7 +60,11 @@ def brainshift_correct(loc, sub, outfolder, fsfolder, overwrite=False):
         logfile = os.path.join(outfolder, sub + '_shiftCorrection.Rlog')
         cmd = ["R", "CMD", "BATCH", "--no-save", "--no-restore", cmd_args,Rcorrection, logfile]
         logger.debug('Executing shell command %s'%str(cmd))
-        call(' '.join(cmd),shell=True)
+        r_proc = Popen(' '.join(cmd),shell=True)
+        log_proc = Popen(['tail','-f',logfile])
+        r_proc.wait()
+        log_proc.kill()
+
         ###
 
         os.chdir(og_dir)

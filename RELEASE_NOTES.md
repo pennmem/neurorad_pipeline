@@ -240,6 +240,14 @@ single file, `localization.json`
 
 * The files `contacts.json` and `pairs.json` will persist in the new pipeline
 
+## UPCOMING:
+
+### Features:
+- Updates to VoxTool; see https://github.com/pennmem/voxTool/blob/master/CHANGELOG.txt
+- Added function to map T1 MRI coordinates to MNI coordinates;
+  function is used to derive brainshift-corrected MNI coordinates
+- Brainshift correction now prints log file to screen
+
 
 ## 11-22-2017 (v2.0.1)
 ### Features:
