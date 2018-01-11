@@ -12,9 +12,16 @@ def test_t1_mri_to_mni(subject):
     t1_coords =np.loadtxt(t1_coord_file,delimiter=',')[:,:3]
     new_mni_coords = t1_mri_to_mni(t1_coords,imaging_root,subject,name)
     old_mni_coords = np.loadtxt(osp.join(imaging_root,'electrode_coordinates_mni.csv'),delimiter=',')[:,:3]
-    print 'Largest discrepancy for subject ',subject,': ', np.abs(new_mni_coords-old_mni_coords).max()
+    max_diff =  np.abs(new_mni_coords-old_mni_coords).max()
+    rel_diff = max_diff/np.abs(old_mni_coords.mean())
+    print 'Largest discrepancy for subject ',subject,': ',max_diff
+    return max_diff,rel_diff
 
 
 if __name__ =='__main__':
-    for subject in ['R1304N','R1286J','R1364C','R1254E']:
-        test_t1_mri_to_mni(subject)
+    with open('mni_diffs.csv','w') as mni_diffs:
+        print>>mni_diffs, 'subject',',','Abs diff',',','Rel diff'
+        for subject in ['R1304N','R1286J','R1364C','R1254E','R1334T']:
+            diffs = test_t1_mri_to_mni(subject)
+            print>>mni_diffs, subject, ',', diffs[0],diffs[1]
+
