@@ -240,7 +240,7 @@ single file, `localization.json`
 
 * The files `contacts.json` and `pairs.json` will persist in the new pipeline
 
-## UPCOMING:
+## 1-16-2018 (v2.0.2):
 
 ### Features:
 - Updates to VoxTool; see https://github.com/pennmem/voxTool/blob/master/CHANGELOG.txt

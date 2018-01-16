@@ -33,7 +33,7 @@ def read_and_tx(t1_file, fs_orig_t1,talxfmfile, localization,):
     """
     Reads electrodenames_coordinates_native_and_T1.csv, returning a dictionary of leads
     :param t1_file: path to electrodenames_coordinates_native_and_T1.csv file
-    :returns: dictionary of form TODO {lead_name: {contact_name1: contact1, contact_name2:contact2, ...}}
+    :returns: dictionary of form {lead_name: {contact_name1: contact1, contact_name2:contact2, ...}}
     """
 
     # Get freesurfer matrices
