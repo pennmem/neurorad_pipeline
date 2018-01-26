@@ -86,7 +86,7 @@ def read_mother(mother_file):
         size = tuple(int(x) for x in split_line['shape'].split())
 
         # Split out contact name and number
-        match = re.match(r'(.+?)(\d+$)', contact_name)
+        match = re.match(r'(.+?)(\d+)([mM]*icro)*$', contact_name)
         lead_name = match.group(1)
         contact_num = int(match.group(2))
 
@@ -136,7 +136,7 @@ def add_grid_loc(leads):
     """
     for lead_name, lead in leads.items():
         # Makes sure the contacts all have the same type
-        types = set(contact.type for contact in lead.values())
+        types = set(re.match(r'u?(.)',contact.type).group(1) for contact in lead.values())
         if len(types) > 1:
             raise Exception("Cannot convert lead with multiple types")
         type = types.pop()
