@@ -10,6 +10,23 @@ class InvalidFieldException(Exception):
 class InvalidContactException(Exception):
     pass
 
+def merge_repeated_keys(pairs):
+    d = {}
+    for (k,v) in pairs:
+        if k in d:
+            if isinstance(d[k],dict) and isinstance(v,dict):
+                d[k] = merge_repeated_keys(d[k].items()+v.items())
+            elif isinstance(d[k],list) and isinstance(v,list):
+                d[k].extend(v)
+            else:
+                d[k]=v
+        else:
+            d[k]=v
+
+
+    return d
+
+
 class Localization(object):
 
 
@@ -60,7 +77,7 @@ class Localization(object):
 
     def from_json(self, json_file):
         """ Loads from a json file """
-        self._contact_dict = json.load(open(json_file))
+        self._contact_dict = json.load(open(json_file),object_pairs_hook=merge_repeated_keys)
         self._orig_filename = json_file
         for lead_name, lead in self._contact_dict['leads'].items():
             for contact in lead['contacts']:
