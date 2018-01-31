@@ -38,7 +38,8 @@ class Localization(object):
         't2_mri',
         'mni',
 		'tal',
-        'fsaverage'
+        'fsaverage',
+        'hcp',
     )
     
     VALID_COORDINATE_TYPES = (
@@ -74,6 +75,11 @@ class Localization(object):
             self.get_pair_coordinates('ct_voxel',self.get_pairs(self.get_lead_names()))
         if not self._contact_dict.get('version'):
             self._contact_dict['version'] = __version__
+
+
+    @property
+    def version(self):
+        return self._contact_dict['version']
 
     def from_json(self, json_file):
         """ Loads from a json file """
@@ -357,7 +363,7 @@ class Localization(object):
         self._validate_type(coordinate_type)
         try: 
             coord = self._get_pair_coordinate(coordinate_space,pair,coordinate_type)
-        except KeyError:
+        except (KeyError,InvalidContactException):
             contact_name1 = pair[0]
             contact_name2 = pair[1]
             coord1 = self.get_contact_coordinate(coordinate_space, contact_name1, coordinate_type)
@@ -365,7 +371,6 @@ class Localization(object):
             if coord1 is None or coord2 is None:
                 return None
             coord = ( np.array(coord1) + np.array(coord2) ) / 2
-            self.set_pair_coordinate(coordinate_space,pair,coord,coordinate_type)
         return np.array(coord)
 
     def get_pair_coordinates(self, coordinate_space, pairs=None, coordinate_type='raw'):
@@ -460,6 +465,9 @@ class Localization(object):
         """
         for pair_name, info_value in zip(pairs, info_values):
             self.set_pair_info(info_label, pair_name, info_value)
+
+    # def add_pair(self,lead_name,pair_names):
+    #     self._contact_dict['leads'][lead_name][]
     
     def _calculate_pairs(self, lead_name):
         pairs = []
@@ -509,7 +517,7 @@ class Localization(object):
     def _pair_dict_by_name(self, pair_names):
         for lead in self._contact_dict['leads'].values():
             for pair in lead['pairs']:
-                if pair['names'][0] == pair_names[0] and pair['names'][1] == pair_names[1]:
+                if all(p in pair['names'] for p in pair_names):
                     return pair
         raise InvalidContactException("Pair {} does not exist!".format(pair_names))
 
