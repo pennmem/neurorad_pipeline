@@ -103,7 +103,7 @@ class Localization(object):
                 lead['pairs'] = []
             for pair_name in pair_names:
                 if pair_name not in [tuple(pair['names']) for pair in lead['pairs']]:
-                    pair = {'names': pair_name, 'atlases': {}, 'info': {}}
+                    pair = {'names': pair_name, 'atlases': {}, 'info': {},'coordinate_spaces':{}}
                     lead['pairs'].append(pair)
         return
 
@@ -363,7 +363,7 @@ class Localization(object):
         self._validate_type(coordinate_type)
         try: 
             coord = self._get_pair_coordinate(coordinate_space,pair,coordinate_type)
-        except (KeyError,InvalidContactException):
+        except (KeyError, InvalidContactException) as error:
             contact_name1 = pair[0]
             contact_name2 = pair[1]
             coord1 = self.get_contact_coordinate(coordinate_space, contact_name1, coordinate_type)
@@ -371,6 +371,8 @@ class Localization(object):
             if coord1 is None or coord2 is None:
                 return None
             coord = ( np.array(coord1) + np.array(coord2) ) / 2
+            if type(error) != InvalidContactException:
+                self.set_pair_coordinate(coordinate_space,pair,coord,coordinate_type)
         return np.array(coord)
 
     def get_pair_coordinates(self, coordinate_space, pairs=None, coordinate_type='raw'):
@@ -382,9 +384,8 @@ class Localization(object):
         coords = []
         if pairs is None:
             pairs = self.get_pairs()
-        for pair in pairs:
-            coords.append(self.get_pair_coordinate(coordinate_space, pair, coordinate_type))
-        return np.array(coords)
+        coords = [self.get_pair_coordinate(coordinate_space,pair,coordinate_type) for pair in pairs]
+        return np.array([c for c in coords if c is not None])
 
 
     def set_pair_label(self, atlas_name, pair, label):
