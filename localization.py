@@ -4,11 +4,14 @@ from json_cleaner import clean_json_dump, clean_json_dumps
 from itertools import combinations
 from version import __version__
 
+
 class InvalidFieldException(Exception):
     pass
 
+
 class InvalidContactException(Exception):
     pass
+
 
 def merge_repeated_keys(pairs):
     d = {}
@@ -23,14 +26,11 @@ def merge_repeated_keys(pairs):
         else:
             d[k]=v
 
-
     return d
 
 
 class Localization(object):
 
-
-    
     VALID_COORDINATE_SPACES = (
         'ct_voxel',
         'fs',
@@ -102,7 +102,7 @@ class Localization(object):
             if 'pairs' not in lead:
                 lead['pairs'] = []
             for pair_name in pair_names:
-                if pair_name not in [tuple(pair['names']) for pair in lead['pairs']]:
+                if pair_name not in [type(pair_name)(pair['names']) for pair in lead['pairs']]:
                     pair = {'names': pair_name, 'atlases': {}, 'info': {},'coordinate_spaces':{}}
                     lead['pairs'].append(pair)
         return
