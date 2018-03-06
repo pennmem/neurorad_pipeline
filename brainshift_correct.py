@@ -3,7 +3,6 @@ from __future__ import print_function
 import os
 import os.path as osp
 from subprocess import call,Popen
-from submission.log import logger
 from numpy import savetxt
 import pandas as pd
 import nibabel as nb
@@ -59,7 +58,6 @@ def brainshift_correct(loc, sub, outfolder, fsfolder, overwrite=False):
         )
         logfile = os.path.join(outfolder, sub + '_shiftCorrection.Rlog')
         cmd = ["R", "CMD", "BATCH", "--no-save", "--no-restore", cmd_args,Rcorrection, logfile]
-        logger.debug('Executing shell command %s'%str(cmd))
         r_proc = Popen(' '.join(cmd),shell=True)
         log_proc = Popen(['tail','-f',logfile])
         r_proc.wait()
@@ -126,11 +124,11 @@ def brainshift_correct(loc, sub, outfolder, fsfolder, overwrite=False):
             loc.get_contact_coordinates('fs',loc.get_contacts(),coordinate_type='corrected'), coords, fs_vertices,
             hcp_names))
     except IOError:
-        logger.warn('HCP atlas labels not available')
+        pass
     try:
         get_fsaverage_coords(rhcoords, lhcoords, loc,fsfolder,sub)
     except Exception:
-        logger.warn("Could not add fsaverage coordinates")
+        pass
     
     return loc
 
