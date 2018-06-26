@@ -88,11 +88,19 @@ def read_mni(mni_loc, localization):
         localization.set_contact_coordinate('mni', contact_name, [contact_mni_x, contact_mni_y, contact_mni_z])
         log.debug(contact_name)
 
+
 def read_manual_locations(loc_excel, localization):
     loc_table = pd.read_excel(loc_excel,index_col=0).dropna(subset=['Tag'])
-    contacts = [x for x in loc_table.index.values if '-' not in x]
-    labels = loc_table.loc[contacts,'Tag'].values
-    localization.set_contact_labels('manual',contacts,labels)
+    contacts = [x for x in loc_table.index.values if x.isalnum()]
+    pairs = [x for x in loc_table.index.values if not x.isalnum()]
+    contact_labels = loc_table.loc[contacts, 'Tag'].values
+    localization.set_contact_labels('manual', contacts, contact_labels)
+
+    for pair in pairs:
+        sep = [c for c in pair if not c.isalnum()][0]
+        c1, c2 = pair.split(sep)
+        localization.set_pair_label('manual', (c1, c2),
+                                    loc_table.loc[pair, 'Tag'])
 
 
 def add_autoloc(files, localization):
