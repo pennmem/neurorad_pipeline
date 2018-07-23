@@ -75,7 +75,7 @@ def read_mother(mother_file):
     """
     # defaultdict allows dictionaries to be created on access so we don't have to check for existence
     leads = defaultdict(dict)
-    mother_table = pd.read_csv(mother_file,sep='\t',header=None,names=['contact','x','y','z','type','shape'])
+    mother_table = pd.read_csv(mother_file,sep='\s+',header=None,names=['contact','x','y','z','type','shape'])
     for line in mother_table.index:
         split_line = mother_table.loc[line]
         contact_name = split_line['contact']
