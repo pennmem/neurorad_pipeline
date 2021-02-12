@@ -1,5 +1,5 @@
 import subprocess
-from config import paths
+from .config import paths
 import logging
 import os.path as osp
 import os
@@ -20,11 +20,11 @@ def make_outer_surface_matlab(filled_file,output_surface_file):
     # freesurfer_matlab = osp.join(osp.dirname(paths.freesurfer_bin),'matlab')
     freesurfer_matlab = '/home1/leond/electrode_vis/freesurfer/matlab'
     curr_dir = os.getcwd()
-    print('matlab directory: %s'%freesurfer_matlab)
+    print(('matlab directory: %s'%freesurfer_matlab))
     os.chdir(freesurfer_matlab)
     matlab_call = 'try make_outer_surface(\'{0}\',15,\'{1}\');catch; end; quit;'.format(filled_file,output_surface_file)
     bash_call = ['matlab', '-nodisplay', '-nojvm', '-nodesktop', '-r', "{}".format(matlab_call)]
-    print('system call: \n %s'%bash_call)
+    print(('system call: \n %s'%bash_call))
     subprocess.call(bash_call)
     os.chdir(curr_dir)
 
@@ -85,7 +85,7 @@ def make_outer_surface(filled_file,output_surface_file,se_diameter = 15):
     # Morphological closing:
 
     # Construct structuring element
-    xx,yy = np.meshgrid(range(-1*se_diameter+1,se_diameter),range(-1*se_diameter+1,se_diameter))
+    xx,yy = np.meshgrid(list(range(-1*se_diameter+1,se_diameter)),list(range(-1*se_diameter+1,se_diameter)))
     se = (xx**2+yy**2)<se_diameter**2
 
     # Take closing

@@ -1,8 +1,8 @@
 import json
 import numpy as np
-from json_cleaner import clean_json_dump, clean_json_dumps
+from .json_cleaner import clean_json_dump, clean_json_dumps
 from itertools import combinations
-from version import __version__
+from .version import __version__
 
 
 class InvalidFieldException(Exception):
@@ -18,7 +18,7 @@ def merge_repeated_keys(pairs):
     for (k,v) in pairs:
         if k in d:
             if isinstance(d[k],dict) and isinstance(v,dict):
-                d[k] = merge_repeated_keys(d[k].items()+v.items())
+                d[k] = merge_repeated_keys(list(d[k].items())+list(v.items()))
             elif isinstance(d[k],list) and isinstance(v,list):
                 d[k].extend(v)
             else:
@@ -85,7 +85,7 @@ class Localization(object):
         """ Loads from a json file """
         self._contact_dict = json.load(open(json_file),object_pairs_hook=merge_repeated_keys)
         self._orig_filename = json_file
-        for lead_name, lead in self._contact_dict['leads'].items():
+        for lead_name, lead in list(self._contact_dict['leads'].items()):
             for contact in lead['contacts']:
                 for field in contact:
                     # Naming convention for voxTool compatibility
@@ -155,7 +155,7 @@ class Localization(object):
         :param contact: The name of the contact
         :returns: "S", "G" or "D"
         """
-        for lead in self._contact_dict['leads'].values():
+        for lead in list(self._contact_dict['leads'].values()):
             for contact_dict in lead['contacts']:
                 if contact_dict['name'] == contact:
                     return lead['type']
@@ -509,14 +509,14 @@ class Localization(object):
                                                                 cls.VALID_ATLASES))
 
     def _contact_dict_by_name(self, contact_name):
-        for lead in self._contact_dict['leads'].values():
+        for lead in list(self._contact_dict['leads'].values()):
             for contact in lead['contacts']:
                 if contact['name'] == contact_name:
                     return contact
         raise InvalidContactException("Contact {} does not exist!".format(contact_name))
 
     def _pair_dict_by_name(self, pair_names):
-        for lead in self._contact_dict['leads'].values():
+        for lead in list(self._contact_dict['leads'].values()):
             for pair in lead['pairs']:
                 if all(p in pair['names'] for p in pair_names):
                     return pair
@@ -538,116 +538,116 @@ if __name__ == '__main__':
     loc.to_json('sample_voxel_coordinates_start.json')
 
     leads = loc.get_lead_names()
-    print('Lead names are {}'.format(leads))
+    print(('Lead names are {}'.format(leads)))
 
     type1 = loc.get_lead_type(leads[0])
-    print('Lead {} has type {}'.format(leads[0], type1))
+    print(('Lead {} has type {}'.format(leads[0], type1)))
     types_multi = loc.get_lead_types(leads[0:3])
-    print('Leads {} have types {}'.format(leads[0:3], types_multi))
+    print(('Leads {} have types {}'.format(leads[0:3], types_multi)))
 
     contact_names1 = loc.get_contacts(leads[0])
-    print('Lead {} has contacts {}'.format(leads[0], contact_names1))
+    print(('Lead {} has contacts {}'.format(leads[0], contact_names1)))
     contact_names_multi = loc.get_contacts(leads[0:3])
-    print('Leads {} have contacts {}'.format(leads[0:3], contact_names_multi))
+    print(('Leads {} have contacts {}'.format(leads[0:3], contact_names_multi)))
     contact_names_all = loc.get_contacts()
-    print('All contacts are {}'.format(contact_names_all))
+    print(('All contacts are {}'.format(contact_names_all)))
 
     type1 = loc.get_contact_type(contact_names1[0])
-    print("Contact {} has type {}".format(contact_names1[0], type1))
+    print(("Contact {} has type {}".format(contact_names1[0], type1)))
     types_multi = loc.get_contact_types(contact_names_all[:5])
-    print("Contacts {} have types {}".format(contact_names_all[:5], types_multi))
+    print(("Contacts {} have types {}".format(contact_names_all[:5], types_multi)))
 
     coords1 = loc.get_contact_coordinate('ct_voxel', contact_names1[0])
-    print('Lead {} has coordinate {}'.format(contact_names1[0], coords1))
+    print(('Lead {} has coordinate {}'.format(contact_names1[0], coords1)))
     coords_multi = loc.get_contact_coordinates('ct_voxel', contact_names_multi[0:3])
-    print('Leads {} have coordinates {}'.format(contact_names_multi[0:3], coords_multi))
+    print(('Leads {} have coordinates {}'.format(contact_names_multi[0:3], coords_multi)))
     coords_all = loc.get_contact_coordinates('ct_voxel', contact_names_all)
-    print('All contacts have coordinates {}'.format(coords_all))
+    print(('All contacts have coordinates {}'.format(coords_all)))
 
     fake_coords = np.array([[1,2,3],[4,5,6],[7,8,9],[10,11,12]])
-    print('Setting contact {} coordinates to {}'.format(contact_names1[0], fake_coords[0]))
+    print(('Setting contact {} coordinates to {}'.format(contact_names1[0], fake_coords[0])))
     loc.set_contact_coordinate('ct_voxel', contact_names1[0], fake_coords[0] )
     coords1 = loc.get_contact_coordinate('ct_voxel', contact_names1[0])
-    print('Contact {} now has coordinates {}'.format(contact_names1[0], coords1))
+    print(('Contact {} now has coordinates {}'.format(contact_names1[0], coords1)))
     if (fake_coords[0] != coords1).any():
         raise Exception("Coordinates do not match")
 
-    print('Setting contacts {} coordinates to {}'.format(contact_names1[1:4], fake_coords[1:4]))
+    print(('Setting contacts {} coordinates to {}'.format(contact_names1[1:4], fake_coords[1:4])))
 
     loc.set_contact_coordinates('ct_voxel', contact_names1[1:4], fake_coords[1:4])
     coords_multi = loc.get_contact_coordinates('ct_voxel', contact_names1[1:4])
-    print('Contacts {} now have coordinates {}'.format(contact_names1[1:4], coords_multi))
+    print(('Contacts {} now have coordinates {}'.format(contact_names1[1:4], coords_multi)))
     if (fake_coords[1:4] != coords_multi).any():
         raise Exception("Coordinates do not match")
 
     empty_label = loc.get_contact_label('whole_brain', contact_names1[0])
     if empty_label is not None:
         raise Exception("Label not None before it is set")
-    print("Contact {} has no label for atlas {}".format(contact_names1[0], 'whole_brain'))
-    print("Setting contact {} atlas {} label to {}".format(contact_names1[0], 'whole_brain', 'in_the_brain'))
+    print(("Contact {} has no label for atlas {}".format(contact_names1[0], 'whole_brain')))
+    print(("Setting contact {} atlas {} label to {}".format(contact_names1[0], 'whole_brain', 'in_the_brain')))
     loc.set_contact_label('whole_brain', contact_names1[0], 'in_the_brain')
     label = loc.get_contact_label('whole_brain', contact_names1[0])
-    print("Contact {} atlas {} label is now {}".format(contact_names1[0], 'whole_brain', label))
+    print(("Contact {} atlas {} label is now {}".format(contact_names1[0], 'whole_brain', label)))
     if (label != 'in_the_brain'):
         raise Exception("Label not properly set")
     labels_multi = loc.get_contact_labels('whole_brain', contact_names1[0:3])
-    print("Contacts {} have labels {} for atlas {}".format(contact_names1[0:3], labels_multi, 'whole_brain'))
+    print(("Contacts {} have labels {} for atlas {}".format(contact_names1[0:3], labels_multi, 'whole_brain')))
     new_labels = ['on_the_brain', 'off_the_brain']
-    print("setting contacts {} atlas {} labels to {}".format(contact_names1[1:3], 'whole_brain', new_labels))
+    print(("setting contacts {} atlas {} labels to {}".format(contact_names1[1:3], 'whole_brain', new_labels)))
     loc.set_contact_labels('whole_brain', contact_names1[1:3], new_labels)
     labels_multi = loc.get_contact_labels('whole_brain', contact_names1[0:3])
-    print("Contacts {} now have atlas {} labels {}".format(contact_names1[0:3], 'whole_brain', labels_multi))
+    print(("Contacts {} now have atlas {} labels {}".format(contact_names1[0:3], 'whole_brain', labels_multi)))
 
     info = loc.get_contact_info('displacement', contact_names1[0])
-    print("Contact {} has displacement {}".format(contact_names1[0], info))
+    print(("Contact {} has displacement {}".format(contact_names1[0], info)))
     loc.set_contact_info('displacement', contact_names1[0], 'TOO MUCH!')
     info = loc.get_contact_info('displacement', contact_names1[0])
-    print("Contact {} has displacement {}".format(contact_names1[0], info))
+    print(("Contact {} has displacement {}".format(contact_names1[0], info)))
 
 
     info = loc.get_contact_infos('displacement', contact_names1[0:2])
-    print("Contacts {} has displacement {}".format(contact_names1[0:2], info))
+    print(("Contacts {} has displacement {}".format(contact_names1[0:2], info)))
     loc.set_contact_infos('displacement', contact_names1[0:2], ('TOO LITTLE!', 'A LOT!'))
     info = loc.get_contact_infos('displacement', contact_names1[0:2])
-    print("Contact {} has displacement {}".format(contact_names1[0:2], info))
+    print(("Contact {} has displacement {}".format(contact_names1[0:2], info)))
 
 
     pairs_1 = loc.get_pairs(leads[0])
-    print("Lead {} has pairs {}".format(leads[0], pairs_1))
+    print(("Lead {} has pairs {}".format(leads[0], pairs_1)))
     pairs_all = loc.get_pairs()
-    print("All pairs in localization are {}".format(pairs_all))
+    print(("All pairs in localization are {}".format(pairs_all)))
 
     coords1 = loc.get_pair_coordinate('ct_voxel', pairs_1[0])
-    print("Pair {} has coordinates {}".format(pairs_1[0], coords1))
+    print(("Pair {} has coordinates {}".format(pairs_1[0], coords1)))
     coords_multi = loc.get_pair_coordinates('ct_voxel', pairs_1[0:3])
-    print("Pairs {} have coordinates {}".format(pairs_1[0:3], coords_multi))
+    print(("Pairs {} have coordinates {}".format(pairs_1[0:3], coords_multi)))
 
     empty_label = loc.get_pair_label('whole_brain', pairs_all[0])
     if empty_label is not None:
         raise Exception("Label is not None before it is set")
-    print("Pair {} has no label for atlas {}".format(pairs_all[0], "whole_brain"))
-    print("Setting pairs {} atlas {} label to {}".format(pairs_all[0], 'whole_brain', 'by_the_brain'))
+    print(("Pair {} has no label for atlas {}".format(pairs_all[0], "whole_brain")))
+    print(("Setting pairs {} atlas {} label to {}".format(pairs_all[0], 'whole_brain', 'by_the_brain')))
     loc.set_pair_label('whole_brain', pairs_all[0], 'by_the_brain')
     label = loc.get_pair_label('whole_brain', pairs_all[0])
-    print("Pair {} atlas {} label now set to {}".format(pairs_all[0], 'whole_brain', label))
+    print(("Pair {} atlas {} label now set to {}".format(pairs_all[0], 'whole_brain', label)))
     new_labels = ['near_the_brain', 'under_the_brain']
-    print("Setting pairs {} atlas {} labels to {}".format(pairs_all[1:3], 'whole_brain', new_labels))
+    print(("Setting pairs {} atlas {} labels to {}".format(pairs_all[1:3], 'whole_brain', new_labels)))
     loc.set_pair_labels('whole_brain', pairs_all[1:3], new_labels)
     labels = loc.get_pair_labels('whole_brain', pairs_all[0:4])
-    print("Pairs {} now have atlas {} labels {}".format(pairs_all[0:4], 'whole_brain', labels))
+    print(("Pairs {} now have atlas {} labels {}".format(pairs_all[0:4], 'whole_brain', labels)))
         
     info = loc.get_pair_info('displacement', pairs_all[0])
-    print("Pair {} has displacement {}".format(pairs_all[0], info))
+    print(("Pair {} has displacement {}".format(pairs_all[0], info)))
     loc.set_pair_info('displacement', pairs_all[0], 'TOO MUCH!')
     info = loc.get_pair_info('displacement', pairs_all[0])
-    print("Pair {} has displacement {}".format(pairs_all[0], info))
+    print(("Pair {} has displacement {}".format(pairs_all[0], info)))
 
 
     info = loc.get_pair_infos('displacement', pairs_all[0:2])
-    print("Pairs {} has displacement {}".format(pairs_all[0:2], info))
+    print(("Pairs {} has displacement {}".format(pairs_all[0:2], info)))
     loc.set_pair_infos('displacement', pairs_all[0:2], ('TOO LITTLE!', 'A LOT!'))
     info = loc.get_pair_infos('displacement', pairs_all[0:2])
-    print("Pairs {} has displacement {}".format(pairs_all[0:2], info))
+    print(("Pairs {} has displacement {}".format(pairs_all[0:2], info)))
 
     
     loc.to_json("sample_voxel_coordinates_end.json")
