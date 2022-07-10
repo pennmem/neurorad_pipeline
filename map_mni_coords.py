@@ -1,6 +1,6 @@
 from nibabel import nifti1
 import numpy as np
-from config import Paths
+from .config import Paths
 import subprocess
 import os.path as osp
 
@@ -59,7 +59,7 @@ def t1_mri_to_mni(t1_mri_coords, imaging_root, subject, name=''):
                     '-t', template_to_subject_warp,
                     '-t','[%s,1]'%faffine,
                     '-t', finversewarp]
-    print 'Calling: ', ' '.join(args)
+    print('Calling: ', ' '.join(args))
     subprocess.check_call(args)
     corrected_mni_coordinates = np.loadtxt(mni_filename,delimiter=',',skiprows=1)
     corrected_mni_coordinates[:,:2] *= -1

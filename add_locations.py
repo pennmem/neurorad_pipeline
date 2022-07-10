@@ -9,11 +9,11 @@ Run:
 """
 import logging
 
-from mri_info import *
-from config import paths
+from .mri_info import *
+from .config import paths
 import pandas as pd
 log = logging.getLogger('submission')
-from localization import InvalidContactException,InvalidFieldException
+from .localization import InvalidContactException,InvalidFieldException
 
 def read_loc(native_loc, localization):
     """

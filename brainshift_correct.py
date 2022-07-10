@@ -1,4 +1,4 @@
-from __future__ import print_function
+
 
 import os
 import os.path as osp
@@ -199,7 +199,7 @@ def get_dk_vertices(electrode_coords,vertex_coords):
         electrode_vertices.append(closest_vertex.tolist())
         electrode_vertices_indices.append(closest_vertex_index)
         electrode_vertex_distances.append(closest_distances)
-    return [np.array(x) for x in electrode_vertices, electrode_vertices_indices, electrode_vertex_distances]
+    return [np.array(x) for x in (electrode_vertices, electrode_vertices_indices, electrode_vertex_distances)]
     # Joel added above
     
     # Joel added below to get fsaverage vertex coords

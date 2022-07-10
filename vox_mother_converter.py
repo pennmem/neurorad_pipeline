@@ -10,8 +10,8 @@ import re
 import pandas as pd
 import os
 from collections import defaultdict
-from config import paths
-from json_cleaner import clean_json_dump
+from .config import paths
+from .json_cleaner import clean_json_dump
 import json
 
 class Contact(object):
@@ -53,13 +53,13 @@ def leads_to_dict(leads):
     out_dict = {}
     out_dict['origin_ct'] = 'UNKNOWN'
     out_dict['leads'] = {}
-    for lead_name, contacts in leads.items():
+    for lead_name, contacts in list(leads.items()):
         lead_dict = {}
-        contact = contacts.values()[0]
+        contact = list(contacts.values())[0]
         lead_dict['type'] = contact.type
         groups = set()
         contact_list = []
-        for contact in contacts.values():
+        for contact in list(contacts.values()):
             groups.add(contact.grid_group)
             contact_list.append(contact.to_dict())
         lead_dict['contacts'] = contact_list
@@ -113,7 +113,7 @@ def add_jacksheet(leads, jacksheet_file):
         # Tries to find lead name vs contact number
         match = re.match(r'(.+?)(\d+$)', contact_name)
         if not match:
-            print('Warning: cannot parse contact {}. Skipping'.format(contact_name))
+            print(('Warning: cannot parse contact {}. Skipping'.format(contact_name)))
             continue
         lead_name = match.group(1)
         contact_num = int(match.group(2))
@@ -121,13 +121,13 @@ def add_jacksheet(leads, jacksheet_file):
         # Makes sure the lead is localized in VOX_coords_mother (which is in leads structure)
         if lead_name not in leads:
             if lead_name not in skipped_leads:
-                print('Warning: skipping lead {}'.format(lead_name))
+                print(('Warning: skipping lead {}'.format(lead_name)))
                 skipped_leads.append(lead_name)
             continue
 
         # Makes sure the contact in the lead is localized 
         if contact_num not in leads[lead_name]:
-            print('Error: neural lead {} missing contact {}'.format(lead_name, contact_num))
+            print(('Error: neural lead {} missing contact {}'.format(lead_name, contact_num)))
             continue
         leads[lead_name][contact_num].jack_num = jack_num
 
@@ -137,16 +137,16 @@ def add_grid_loc(leads):
     :param leads: dictionary of form {lead_name: {contact_name1: contact1, contact_name2:contact2, ...}}
     :returns: Nothing. Modifies leads in place
     """
-    for lead_name, lead in leads.items():
+    for lead_name, lead in list(leads.items()):
         # Makes sure the contacts all have the same type
-        types = set(re.match(r'u?(.)',contact.type).group(1) for contact in lead.values())
+        types = set(re.match(r'u?(.)',contact.type).group(1) for contact in list(lead.values()))
         if len(types) > 1:
             raise Exception("Cannot convert lead with multiple types")
         type = types.pop()
 
         # Grid locations for strips and depths are just the contact number
         if type != 'G':
-            for contact in lead.values():
+            for contact in list(lead.values()):
                 contact.grid_loc = (1, contact.num)
                 contact.grid_group = 0
 
@@ -176,8 +176,8 @@ def x2_add_freesurfer_coords(leads, files):
         contact_name = split_line[0][1:]
         fs_coords = [float(f) for f in split_line[1:4]]
         found = False
-        for lead_name, lead in leads.items():
-            for contact in lead.values():
+        for lead_name, lead in list(leads.items()):
+            for contact in list(lead.values()):
                 if contact.name == contact_name:
                     contact.fs_coords = fs_coords
                     found = True
@@ -185,7 +185,7 @@ def x2_add_freesurfer_coords(leads, files):
             if found:
                 break
         else:
-            print('WARNING: could not find {}'.format(contact_name))
+            print(('WARNING: could not find {}'.format(contact_name)))
 
 def X_add_freesurfer_coords(leads, files):
     raw_coords = files['fs_coords']
@@ -193,8 +193,8 @@ def X_add_freesurfer_coords(leads, files):
         split_line = line.split('\t')
         jack_num = int(split_line[0])
         fs_coords = [float(f) for f in split_line[1:]]
-        for lead in leads.values():
-            for contact in lead.values():
+        for lead in list(leads.values()):
+            for contact in list(lead.values()):
                 if contact.jack_num is not None and int(contact.jack_num) == int(jack_num):
                     contact.fs_coords = fs_coords
 
@@ -205,8 +205,8 @@ def add_freesurfer_coords(leads, files):
         jack_num = int(child_line.split('\t')[0])
         split_line = coord_line.split()
         fs_coords = [float(f) for f in split_line]
-        for lead in leads.values():
-            for contact in lead.values():
+        for lead in list(leads.values()):
+            for contact in list(lead.values()):
                 if contact.jack_num is not None and int(contact.jack_num) == int(jack_num):
                     contact.fs_coords = fs_coords
         
