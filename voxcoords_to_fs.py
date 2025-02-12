@@ -13,12 +13,11 @@ import re
 import numpy as np
 import os
 from collections import defaultdict
-from .config import RHINO_ROOT
-from .json_cleaner import clean_dump
-from .mri_info import *
+from config import RHINO_ROOT
+from json_cleaner import clean_dump
+from mri_info import *
 from numpy.linalg import inv
 import json
-from functools import reduce
 
 class Contact(object):
     """
@@ -52,8 +51,8 @@ def leads_to_dict(leads):
     :returns: dictionary of form {contact_name1: {contact properties...}, contact_name2: {contact properties}}
     """
     out_dict = {}
-    for lead_name, contacts in list(leads.items()):
-        for contact in list(contacts.values()):
+    for lead_name, contacts in leads.items():
+        for contact in contacts.values():
             out_dict[contact.name] = contact.to_dict()
     return out_dict
 
@@ -90,7 +89,7 @@ def read_and_tx(t1_file, fs_orig_t1):
         # Compute the transformation
         fullmat = Torig * inv(Norig) 
         fscoords = fullmat.dot( coords )
-        print(contact_name, fscoords)  
+        print contact_name, fscoords  
 
         # Split out contact name and number
         match = re.match(r'(.+?)(\d+$)', contact_name)
