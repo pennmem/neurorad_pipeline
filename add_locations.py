@@ -51,7 +51,10 @@ def read_pair_loc(native_pair_loc,localization):
         for line in npl:
             pair_name,contact_loc = line.strip().split(',')[:2]
 
-            pair = [s.strip() for s in pair_name.split('-')]
+            split_names = pair_name.split(' - ')
+            if len(split_names) < 2:
+              split_names = pair_name.split('-')
+            pair = [s.strip() for s in split_names]
 
             loc_list = contact_loc.split('/')
 
